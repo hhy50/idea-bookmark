@@ -1,0 +1,45 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
+    <id>io.github.hhy.bookmark</id>
+
+    <!-- Public plugin name should be written in Title Case.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
+    <name>Bookmark-Viewer</name>
+
+    <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
+    <vendor email="491680922@qq.com">hhy</vendor>
+
+    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
+         Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
+    <extensions defaultExtensionNs="com.intellij">
+        <notificationGroup displayType="NONE" id="BookMark.NONE"/>
+        <notificationGroup displayType="BALLOON" id="BookMark.BALLOON"/>
+        <notificationGroup displayType="STICKY_BALLOON" id="BookMark.STICKY_BALLOON"/>
+        <notificationGroup displayType="TOOL_WINDOW" id="BookMark.TOOL_WINDOW"/>
+    </extensions>
+
+    <!-- Product and plugin compatibility requirements.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
+    <description><![CDATA[
+            <p>本插件可以将idea书签保存到本地和git仓库, 方便不同设备间书签的管理</p>
+            github: <a href="https://github.com/haiyanghan/idea-bookmark">@github</a>
+            <br />
+            qq群: 904726708
+      ]]>
+    </description>
+
+    <!-- Extension points defined by the plugin.
+     Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
+    <depends>com.intellij.modules.platform</depends>
+
+    <applicationListeners>
+        <listener class="io.github.hhy.bookmark.BookMarkProject"
+                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
+    </applicationListeners>
+
+    <actions>
+
+    </actions>
+</idea-plugin>
