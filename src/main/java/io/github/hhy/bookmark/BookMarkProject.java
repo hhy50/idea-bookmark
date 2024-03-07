@@ -2,14 +2,12 @@ package io.github.hhy.bookmark;
 
 import com.intellij.ide.bookmarks.Bookmark;
 import com.intellij.ide.bookmarks.BookmarkManager;
-import com.intellij.ide.bookmarks.BookmarksListener;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManagerListener;
 import com.intellij.openapi.startup.StartupManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
-import com.intellij.util.messages.MessageBusConnection;
 import io.github.hhy.bookmark.notify.Notify;
 import io.github.hhy.bookmark.storage.Element;
 import io.github.hhy.bookmark.storage.Storage;
@@ -27,13 +25,9 @@ public class BookMarkProject implements ProjectManagerListener {
 
     private static final String SEPARATOR = "#";
 
-
     @Override
     public void projectOpened(@NotNull Project project) {
-        final MessageBusConnection connection = project.getMessageBus().connect();
-        connection.subscribe(BookmarksListener.TOPIC, new BookMarkListener(project));
-
-        StartupManager.getInstance(project).runWhenProjectIsInitialized(() -> {
+        StartupManager.getInstance(project).runAfterOpened(() -> {
             Storage storage = Storage.getStorage(project);
             try {
                 // init in open project
@@ -50,16 +44,13 @@ public class BookMarkProject implements ProjectManagerListener {
         });
     }
 
-    private List<Element> fuzzyMatching(List<Bookmark> existBookmarks, List<Element> elements) {
-        return elements;
-    }
-
     /**
      * compare and recovery
+     *
      * @param project
      * @param backups
      */
-    public void load(Project project, List<Element> backups) {
+    public static void load(Project project, List<Element> backups) {
         if (CollectionUtils.isNotEmpty(backups)) {
             BookmarkManager bookmarkManager = project.getService(BookmarkManager.class);
             List<Element> noMatched = new ArrayList<>();
@@ -92,5 +83,9 @@ public class BookMarkProject implements ProjectManagerListener {
                 }
             }
         }
+    }
+
+    private static List<Element> fuzzyMatching(List<Bookmark> existBookmarks, List<Element> elements) {
+        return elements;
     }
 }

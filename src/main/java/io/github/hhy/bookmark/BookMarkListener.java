@@ -13,7 +13,7 @@ public class BookMarkListener implements BookmarksListener {
 
     private Project project;
 
-    public BookMarkListener(Project project) {
+    public BookMarkListener(@NotNull Project project) {
         this.project = project;
     }
 

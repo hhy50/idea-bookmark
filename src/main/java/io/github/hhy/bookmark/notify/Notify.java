@@ -18,7 +18,7 @@ public class Notify {
     };
 
     public static void info(String msg) {
-        msg = String.format("[Macaque] [%s] %s", now(), msg);
+        msg = String.format("[Bookmark] [%s] %s", now(), msg);
         Notification notify = LOG_GROUP.createNotification(msg, NotificationType.INFORMATION);
         Notifications.Bus.notify(notify);
     }
