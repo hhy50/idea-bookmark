@@ -1,20 +1,14 @@
 package io.github.hhy.bookmark;
 
-import com.intellij.ide.bookmarks.Bookmark;
-import com.intellij.ide.bookmarks.BookmarkManager;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManagerListener;
 import com.intellij.openapi.startup.StartupManager;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.vfs.VirtualFileManager;
+import io.github.hhy.bookmark.element.Element;
 import io.github.hhy.bookmark.notify.Notify;
-import io.github.hhy.bookmark.storage.Element;
 import io.github.hhy.bookmark.storage.Storage;
 import org.apache.commons.collections.CollectionUtils;
 import org.jetbrains.annotations.NotNull;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -39,28 +33,24 @@ public class BookMarkProject implements ProjectManagerListener {
                 // restore
                 storage.storage();
             } catch (Exception e) {
+                e.printStackTrace();
                 Notify.error(e.getMessage());
             }
         });
     }
 
-    /**
-     * compare and recovery
-     *
-     * @param project
-     * @param backups
-     */
     public static void load(Project project, List<Element> backups) {
         if (CollectionUtils.isNotEmpty(backups)) {
-            BookmarkManager bookmarkManager = project.getService(BookmarkManager.class);
+            MyBookmarkManager myBookmarkManager = MyBookmarkManager.getBookmarkManager();
+
             List<Element> noMatched = new ArrayList<>();
-            Map<String, Bookmark> grouped = bookmarkManager.getAllBookmarks().stream()
-                    .collect(Collectors.toMap(item -> item.getFile().getPath() + SEPARATOR + item.getLine(), Function.identity()));
+            Map<String, Element> grouped = myBookmarkManager.getAllBookmarks(project).stream()
+                    .collect(Collectors.toMap(item -> item.getFileDescriptor() + SEPARATOR + item.getLinenumber(), Function.identity()));
+
             for (Element element : backups) {
-                Bookmark bookmark = grouped.get(element.getFileDescriptor() + SEPARATOR + element.getLinenumber());
-                if (bookmark != null) {
+                Element existEle = grouped.get(element.getFileDescriptor() + SEPARATOR + element.getLinenumber());
+                if (existEle != null) {
                     grouped.remove(element.getFileDescriptor() + SEPARATOR + element.getLinenumber());
-                    element.assimilate(bookmark);
                 } else noMatched.add(element);
             }
 
@@ -69,23 +59,12 @@ public class BookMarkProject implements ProjectManagerListener {
                 List<Element> diffSet = fuzzyMatching(new ArrayList<>(grouped.values()), noMatched);
 
                 // recovery
-                if (CollectionUtils.isEmpty(diffSet)) return;
-                VirtualFileManager virtualFileManager = ApplicationManager.getApplication().getService(VirtualFileManager.class);
-                for (Element d : diffSet) {
-                    try {
-                        VirtualFile virtualFile = virtualFileManager.findFileByNioPath(Path.of(d.getFileDescriptor()));
-                        if (virtualFile != null) {
-                            bookmarkManager.addTextBookmark(virtualFile, d.getLinenumber(), d.getDescription());
-                        }
-                    } catch (Exception e) {
-                        Notify.error(e.getMessage());
-                    }
-                }
+                myBookmarkManager.addBookmarks(project, diffSet);
             }
         }
     }
 
-    private static List<Element> fuzzyMatching(List<Bookmark> existBookmarks, List<Element> elements) {
+    private static List<Element> fuzzyMatching(List<Element> existBookmarks, List<Element> elements) {
         return elements;
     }
 }

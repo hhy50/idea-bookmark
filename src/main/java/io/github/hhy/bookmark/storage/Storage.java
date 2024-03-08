@@ -1,6 +1,7 @@
 package io.github.hhy.bookmark.storage;
 
 import com.intellij.openapi.project.Project;
+import io.github.hhy.bookmark.element.Element;
 
 import java.io.IOException;
 import java.util.List;

@@ -218,14 +218,16 @@ public class ReflectionUtil {
         }
     }
 
-    public static int getInt(Object obj, String name)
-            throws IllegalAccessException, NoSuchFieldException {
-        Field field = getField(obj.getClass(), name);
-        if (field == null) {
-            throw new NoSuchFieldException();
+    public static int getInt(Object obj, String name) {
+        try {
+            Field field = getField(obj.getClass(), name);
+            if (field == null) {
+                throw new NoSuchFieldException();
+            }
+            field.setAccessible(true);
+            return field.getInt(obj);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
         }
-
-        field.setAccessible(true);
-        return field.getInt(obj);
     }
 }

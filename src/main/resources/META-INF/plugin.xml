@@ -41,7 +41,7 @@
 
     <projectListeners>
         <listener class="io.github.hhy.bookmark.BookMarkListener"
-                  topic="com.intellij.ide.bookmarks.BookmarksListener"/>
+                  topic="com.intellij.ide.bookmark.BookmarksListener"/>
     </projectListeners>
 
     <actions>
