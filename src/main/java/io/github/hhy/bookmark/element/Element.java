@@ -1,8 +1,8 @@
 package io.github.hhy.bookmark.element;
 
-import io.github.hhy.bookmark.exceptions.AssimilateException;
+import org.jetbrains.annotations.NotNull;
 
-public class Element {
+public class Element implements Comparable<Element> {
 
     /**
      * Bookmark Index
@@ -22,7 +22,7 @@ public class Element {
     /**
      * Line number
      */
-    private int linenumber;
+    private int linenumber = -1;
 
     /**
      * Element type
@@ -41,24 +41,12 @@ public class Element {
 
 
     /**
-     *
      * @param type
      * @param name
      */
     public Element(Type type, String name) {
         this.setType(type.toString())
                 .setName(name);
-    }
-
-    public void assimilate(Element element) throws AssimilateException {
-        try {
-            this.setIndex(element.getIndex())
-                    .setName(element.getName())
-                    .setFileDescriptor(element.getFileDescriptor())
-                    .setLinenumber(element.getLinenumber());
-        } catch (Exception e) {
-            throw new AssimilateException(e);
-        }
     }
 
     public int getIndex() {
@@ -122,5 +110,15 @@ public class Element {
     public Element setGroup(String group) {
         this.group = group;
         return this;
+    }
+
+    @Override
+    public int compareTo(@NotNull Element o) {
+        if (this.type.equals(Type.GROUP.toString())) {
+            return 1;
+        } else if (o.type.equals(Type.GROUP.toString())) {
+            return -1;
+        }
+        return this.group.compareTo(o.group);
     }
 }

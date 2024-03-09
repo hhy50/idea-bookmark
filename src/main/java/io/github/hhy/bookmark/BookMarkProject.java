@@ -4,11 +4,13 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManagerListener;
 import com.intellij.openapi.startup.StartupManager;
 import io.github.hhy.bookmark.element.Element;
+import io.github.hhy.bookmark.manager.MyBookmarkManager;
 import io.github.hhy.bookmark.notify.Notify;
 import io.github.hhy.bookmark.storage.Storage;
 import org.apache.commons.collections.CollectionUtils;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,10 +30,7 @@ public class BookMarkProject implements ProjectManagerListener {
                 storage.init();
 
                 // compare and recovery
-                load(project, storage.read());
-
-                // restore
-                storage.storage();
+                load(project, storage);
             } catch (Exception e) {
                 e.printStackTrace();
                 Notify.error(e.getMessage());
@@ -39,7 +38,8 @@ public class BookMarkProject implements ProjectManagerListener {
         });
     }
 
-    public static void load(Project project, List<Element> backups) {
+    public static void load(Project project, Storage storage) throws IOException {
+        List<Element> backups = storage.getElements();
         if (CollectionUtils.isNotEmpty(backups)) {
             MyBookmarkManager myBookmarkManager = MyBookmarkManager.getBookmarkManager();
 
@@ -55,11 +55,12 @@ public class BookMarkProject implements ProjectManagerListener {
             }
 
             if (CollectionUtils.isNotEmpty(noMatched)) {
-                // Fuzzy matching
-                List<Element> diffSet = fuzzyMatching(new ArrayList<>(grouped.values()), noMatched);
-
                 // recovery
-                myBookmarkManager.addBookmarks(project, diffSet);
+                myBookmarkManager.addBookmarks(project, noMatched);
+            }
+
+            if (grouped.size() > 0) {
+                storage.addElements(new ArrayList<>(grouped.values()));
             }
         }
     }
