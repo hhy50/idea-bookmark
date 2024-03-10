@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.BuildNumber;
 import io.github.hhy.bookmark.element.Element;
 
+import java.util.Collections;
 import java.util.List;
 
 public interface MyBookmarkManager {
@@ -26,8 +27,24 @@ public interface MyBookmarkManager {
 
     /**
      * Add
+     *
      * @param project
      * @param elements
      */
     public void addBookmarks(Project project, List<Element> elements);
+
+    /**
+     * @param fileDescription
+     * @param lineNumber
+     */
+    Element getBookmark(Project projetc, String fileDescription, int lineNumber);
+
+    /**
+     * 删除无效的书签
+     *
+     * @param project
+     */
+    default List<Element> removeInvalid(Project project) {
+        return Collections.emptyList();
+    }
 }

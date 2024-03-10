@@ -10,13 +10,6 @@ import java.util.List;
 public interface Storage {
 
     /**
-     * project in opened call
-     */
-    default void init() throws Exception {
-
-    }
-
-    /**
      *
      * @return
      * @throws IOException
@@ -60,5 +53,4 @@ public interface Storage {
     static Storage getStorage(Project project) {
         return new LocalFileStorage(project);
     }
-
 }

@@ -5,7 +5,6 @@ import com.google.gson.GsonBuilder;
 import com.intellij.openapi.project.Project;
 import io.github.hhy.bookmark.element.Element;
 import io.github.hhy.bookmark.element.Type;
-import kotlinx.html.P;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
@@ -73,8 +72,7 @@ public class LocalFileStorage implements Storage {
 
     @Override
     public Element getBookmarkElement(String fileDescription, int linenumber) throws IOException {
-        Element target = new Element(Type.BOOKMARK, "")
-                .setFileDescriptor(fileDescription).setLinenumber(linenumber);
+        Element target = Element.createBookmark(fileDescription, linenumber);
         for (Element element : getElements()) {
             if (elementEq(element, target)) {
                 return element;
@@ -84,13 +82,13 @@ public class LocalFileStorage implements Storage {
     }
 
     public static boolean elementEq(Element ele1, Element ele2) {
-        if (!ele1.getType().equals(ele2.getType())) {
+        if (!ele1.elementType().equals(ele2.elementType())) {
             return false;
         }
-        if (ele1.getType().equals(Type.GROUP.toString())) {
-            return ele1.getName().equals(ele2.getName());
+        if (ele1.elementType() == Type.GROUP) {
+            return ele1.name().equals(ele2.name());
         }
-        return ele1.getFileDescriptor().equals(ele2.getFileDescriptor())
-                && ele1.getLinenumber() == ele2.getLinenumber();
+        return ele1.fileDescriptor().equals(ele2.fileDescriptor())
+                && ele1.linenumber() == ele2.linenumber();
     }
 }

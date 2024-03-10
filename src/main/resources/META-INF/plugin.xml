@@ -35,14 +35,13 @@
     <depends>com.intellij.modules.platform</depends>
 
     <applicationListeners>
-        <listener class="io.github.hhy.bookmark.BookMarkProject"
+        <listener class="io.github.hhy.bookmark.BookmarkProject"
                   topic="com.intellij.openapi.project.ProjectManagerListener"/>
     </applicationListeners>
 
-    <projectListeners>
-        <listener class="io.github.hhy.bookmark.BookMarkListener"
-                  topic="com.intellij.ide.bookmark.BookmarksListener"/>
-    </projectListeners>
+    <extensions defaultExtensionNs="com.intellij">
+        <postStartupActivity implementation="io.github.hhy.bookmark.BookmarkStarterActivity"/>
+    </extensions>
 
     <actions>
 

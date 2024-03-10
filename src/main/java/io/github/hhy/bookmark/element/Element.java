@@ -2,121 +2,68 @@ package io.github.hhy.bookmark.element;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Element implements Comparable<Element> {
 
-    /**
-     * Bookmark Index
-     */
-    private int index;
+/**
+ * @param elementType    Element type
+ * @param name           Bookmark description
+ * @param index          Bookmark index
+ * @param fileDescriptor File descriptor
+ * @param linenumber     Line number
+ * @param group          Bookmark group
+ * @param bookmarkType   Bookmark type
+ */
+public record Element(Type elementType, String name,
+                      int index, String fileDescriptor, int linenumber, String group, String bookmarkType
+) implements Comparable<Element> {
 
-    /**
-     * Bookmark description
-     */
-    private String name;
+    private static final String SEPARATOR = "#";
 
-    /**
-     * File descriptor
-     */
-    private String fileDescriptor;
+    public Element {
 
-    /**
-     * Line number
-     */
-    private int linenumber = -1;
+    }
 
-    /**
-     * Element type
-     */
-    private String type;
+    public Element(Type elementType, String fileDescriptor, int linenumber) {
+        this(elementType, null, 0, fileDescriptor, linenumber, null, null);
+    }
 
-    /**
-     * BookmarkType
-     */
-    private String bookmarkType;
 
-    /**
-     * Bookmark group
-     */
-    private String group;
+    public Element(Type elementType, String name) {
+        this(elementType, name, 0, null, -1, null, null);
+    }
 
 
     /**
-     * @param type
+     * createNewGroup
+     *
      * @param name
      */
-    public Element(Type type, String name) {
-        this.setType(type.toString())
-                .setName(name);
+    public static Element createGroup(String name) {
+        return new Element(Type.GROUP, name);
     }
 
-    public int getIndex() {
-        return index;
+    /**
+     * createBookmark
+     *
+     * @param fileDescriptor
+     * @param linenumber
+     * @return
+     */
+    public static Element createBookmark(String fileDescriptor, int linenumber) {
+        return new Element(Type.BOOKMARK, fileDescriptor, linenumber);
     }
 
-    public Element setIndex(int index) {
-        this.index = index;
-        return this;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public Element setName(String name) {
-        this.name = name;
-        return this;
-    }
-
-    public String getFileDescriptor() {
-        return fileDescriptor;
-    }
-
-    public Element setFileDescriptor(String fileDescriptor) {
-        this.fileDescriptor = fileDescriptor;
-        return this;
-    }
-
-    public int getLinenumber() {
-        return linenumber;
-    }
-
-    public Element setLinenumber(int linenumber) {
-        this.linenumber = linenumber;
-        return this;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public Element setType(String type) {
-        this.type = type;
-        return this;
-    }
-
-    public String getBookmarkType() {
-        return bookmarkType;
-    }
-
-    public Element setBookmarkType(String bookmarkType) {
-        this.bookmarkType = bookmarkType;
-        return this;
-    }
-
-    public String getGroup() {
-        return group;
-    }
-
-    public Element setGroup(String group) {
-        this.group = group;
-        return this;
+    public String groupByKey() {
+        if (this.elementType == Type.GROUP) {
+            return "GROUP_" + SEPARATOR + this.name;
+        }
+        return this.fileDescriptor + SEPARATOR + this.linenumber;
     }
 
     @Override
     public int compareTo(@NotNull Element o) {
-        if (this.type.equals(Type.GROUP.toString())) {
+        if (this.elementType == Type.GROUP) {
             return 1;
-        } else if (o.type.equals(Type.GROUP.toString())) {
+        } else if (o.elementType == Type.GROUP) {
             return -1;
         }
         return this.group.compareTo(o.group);

@@ -7,24 +7,23 @@ import com.intellij.ide.bookmark.providers.FileBookmarkImpl;
 import com.intellij.ide.bookmark.providers.LineBookmarkImpl;
 import com.intellij.openapi.project.Project;
 import io.github.hhy.bookmark.element.Element;
+import io.github.hhy.bookmark.element.ElementBuilder;
 import io.github.hhy.bookmark.element.Type;
 import io.github.hhy.bookmark.manager.MyBookmarkManager;
 import io.github.hhy.bookmark.notify.Notify;
 import io.github.hhy.bookmark.storage.Storage;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BookMarkListener implements BookmarksListener {
+public class BookmarkListener implements BookmarksListener {
 
     private final Project project;
 
-    public BookMarkListener(Project project) {
+    public BookmarkListener(Project project) {
         this.project = project;
     }
 
@@ -35,8 +34,7 @@ public class BookMarkListener implements BookmarksListener {
     public void groupAdded(@NotNull BookmarkGroup group) {
         Storage storage = Storage.getStorage(project);
         try {
-            storage.addElement(new Element(Type.GROUP, group.getName())
-                    .setFileDescriptor(group.getName()));
+            storage.addElement(Element.createGroup(group.getName()));
         } catch (IOException e) {
             Notify.error(e.getMessage());
         }
@@ -45,7 +43,7 @@ public class BookMarkListener implements BookmarksListener {
     public void groupRemoved(@NotNull BookmarkGroup group) {
         Storage storage = Storage.getStorage(project);
         try {
-            storage.removeElement(new Element(Type.GROUP, group.getName()));
+            storage.removeElement(Element.createGroup(group.getName()));
         } catch (IOException e) {
             Notify.error(e.getMessage());
         }
@@ -55,13 +53,13 @@ public class BookMarkListener implements BookmarksListener {
         try {
             List<Element> affected = new ArrayList<>();
             for (Element element : MyBookmarkManager.getBookmarkManager().getAllBookmarks(project)) {
-                if (StringUtils.isNotEmpty(element.getGroup()) && element.getGroup().equals(group.getName())) {
+                if (element.elementType() == Type.BOOKMARK && element.group().equals(group.getName())) {
                     affected.add(element);
                 }
             }
             if (CollectionUtils.isNotEmpty(affected)) {
                 Storage storage = Storage.getStorage(project);
-                storage.addElement(new Element(Type.GROUP, group.getName()));
+                storage.addElement(Element.createGroup(group.getName()));
                 storage.addElements(affected);
             }
         } catch (IOException e) {
@@ -72,14 +70,10 @@ public class BookMarkListener implements BookmarksListener {
     public void bookmarkAdded(@NotNull BookmarkGroup group, @NotNull Bookmark bookmark) {
         try {
             if (bookmark instanceof LineBookmarkImpl lineBookmark) {
-                for (Element element : MyBookmarkManager.getBookmarkManager().getAllBookmarks(project)) {
-                    if (element.getFileDescriptor().equals(lineBookmark.getFile().getPath())
-                            && element.getLinenumber() == lineBookmark.getLine()) {
-                        Storage storage = Storage.getStorage(project);
-                        storage.addElement(element);
-                        break;
-                    }
-                }
+                Element element = MyBookmarkManager.getBookmarkManager()
+                        .getBookmark(project, lineBookmark.getFile().getPath(), lineBookmark.getLine());
+                Storage storage = Storage.getStorage(project);
+                storage.addElement(element);
             }
         } catch (IOException e) {
             Notify.error("Bookmark synchronization failed!");
@@ -90,16 +84,19 @@ public class BookMarkListener implements BookmarksListener {
         try {
             Storage storage = Storage.getStorage(project);
             if (bookmark instanceof LineBookmarkImpl lineBookmark) {
-                storage.removeElement(new Element(Type.BOOKMARK, "")
-                        .setGroup(group.getName())
-                        .setFileDescriptor(lineBookmark.getFile().getPath())
-                        .setLinenumber(lineBookmark.getLine())
-                );
+                Element element = ElementBuilder.anElement()
+                        .withElementType(Type.BOOKMARK)
+                        .withFileDescriptor(lineBookmark.getFile().getPath())
+                        .withLinenumber(lineBookmark.getLine())
+                        .build();
+                storage.removeElement(element);
             } else if (bookmark instanceof FileBookmarkImpl fileBookmark) {
-                storage.removeElement(new Element(Type.BOOKMARK, "")
-                        .setGroup(group.getName())
-                        .setFileDescriptor(fileBookmark.getFile().getPath())
-                        .setLinenumber(-1));
+                Element element = ElementBuilder.anElement()
+                        .withElementType(Type.BOOKMARK)
+                        .withFileDescriptor(fileBookmark.getFile().getPath())
+                        .withLinenumber(-1)
+                        .build();
+                storage.removeElement(element);
             }
         } catch (IOException e) {
             Notify.error("Bookmark synchronization failed!");
@@ -108,21 +105,34 @@ public class BookMarkListener implements BookmarksListener {
 
     public void bookmarkChanged(@NotNull BookmarkGroup group, @NotNull Bookmark bookmark) {
         try {
-            List<Element> affected = new ArrayList<>();
-            for (Element element : MyBookmarkManager.getBookmarkManager().getAllBookmarks(project)) {
-                if (StringUtils.isNotEmpty(element.getGroup()) && element.getGroup().equals(group.getName())) {
-                    affected.add(element);
-                }
-            }
-            if (CollectionUtils.isNotEmpty(affected)) {
-                Storage storage = Storage.getStorage(project);
-                storage.addElements(affected);
-            }
+            bookmarkChanged(bookmark);
         } catch (IOException e) {
             Notify.error("Bookmark synchronization failed!");
         }
     }
 
-    public void structureChanged(@Nullable Object node) {
+    @Override
+    public void bookmarkTypeChanged(@NotNull Bookmark bookmark) {
+        try {
+            bookmarkChanged(bookmark);
+        } catch (IOException e) {
+            Notify.error("Bookmark synchronization failed!");
+        }
+    }
+
+    private void bookmarkChanged(Bookmark bookmark) throws IOException {
+        String fileDescriptor = null;
+        int linenumber = -1;
+        if (bookmark instanceof LineBookmarkImpl lineBookmark) {
+            fileDescriptor = lineBookmark.getFile().getPath();
+            linenumber = lineBookmark.getLine();
+        } else if (bookmark instanceof FileBookmarkImpl fileBookmark) {
+            fileDescriptor = fileBookmark.getFile().getPath();
+        }
+        Element element = MyBookmarkManager.getBookmarkManager().getBookmark(project, fileDescriptor, linenumber);
+        if (element != null) {
+            Storage storage = Storage.getStorage(project);
+            storage.addElement(element);
+        }
     }
 }
