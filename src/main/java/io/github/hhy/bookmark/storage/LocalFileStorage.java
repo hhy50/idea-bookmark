@@ -9,7 +9,6 @@ import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -27,6 +26,18 @@ public class LocalFileStorage implements Storage {
     public LocalFileStorage(Project project) {
         this.project = project;
         this.file = Path.of(project.getBasePath(), DEFAULT_FILE);
+        this.checkFile();
+    }
+
+    private void checkFile() {
+        File f = file.toFile();
+        if (!f.exists()) {
+            try {
+                f.createNewFile();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     @Override

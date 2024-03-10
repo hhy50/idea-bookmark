@@ -7,7 +7,6 @@ import com.intellij.openapi.startup.StartupManager;
 import com.intellij.util.messages.MessageBusConnection;
 import io.github.hhy.bookmark.element.Element;
 import io.github.hhy.bookmark.manager.MyBookmarkManager;
-import io.github.hhy.bookmark.notify.Notify;
 import io.github.hhy.bookmark.storage.Storage;
 import org.apache.commons.collections.CollectionUtils;
 import org.jetbrains.annotations.NotNull;
