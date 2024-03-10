@@ -9,6 +9,7 @@ import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -67,7 +68,7 @@ public class LocalFileStorage implements Storage {
             return;
         }
         Collections.sort(elements);
-        Files.write(file, gson.toJson(elements).getBytes());
+        Files.writeString(file, gson.toJson(elements));
     }
 
     @Override

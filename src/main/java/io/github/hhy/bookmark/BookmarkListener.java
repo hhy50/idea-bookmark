@@ -69,12 +69,17 @@ public class BookmarkListener implements BookmarksListener {
 
     public void bookmarkAdded(@NotNull BookmarkGroup group, @NotNull Bookmark bookmark) {
         try {
+            Element element = null;
             if (bookmark instanceof LineBookmarkImpl lineBookmark) {
-                Element element = MyBookmarkManager.getBookmarkManager()
+                element = MyBookmarkManager.getBookmarkManager()
                         .getBookmark(project, lineBookmark.getFile().getPath(), lineBookmark.getLine());
-                Storage storage = Storage.getStorage(project);
-                storage.addElement(element);
+            } else if (bookmark instanceof FileBookmarkImpl fileBookmark) {
+                element = MyBookmarkManager.getBookmarkManager()
+                        .getBookmark(project, fileBookmark.getFile().getPath(), -1);
             }
+            if (element == null) return;
+            Storage storage = Storage.getStorage(project);
+            storage.addElement(element);
         } catch (IOException e) {
             Notify.error("Bookmark synchronization failed!");
         }
