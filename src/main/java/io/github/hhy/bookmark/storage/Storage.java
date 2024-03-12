@@ -34,23 +34,16 @@ public interface Storage {
 
     /**
      * storage
-     * @param elements
      * @throws IOException
      */
-    public void storage(List<Element> elements) throws IOException;
-
-    /**
-     *
-     * @return
-     */
-    Element getBookmarkElement(String fileDescription, int linenumber) throws IOException;
+    public void storage() throws IOException;
 
     /**
      *
      * @param project
      * @return
      */
-    static Storage getStorage(Project project) {
+    static Storage getStorage(Project project) throws IOException {
         return new LocalFileStorage(project);
     }
 }

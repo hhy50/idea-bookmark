@@ -49,11 +49,12 @@ public class BookmarkProject implements ProjectManagerListener {
 
         List<Element> invalids = myBookmarkManager.removeInvalid(project);
         if (grouped.size() > 0) {
-            storage.storage(new ArrayList<>(grouped.values()));
+            storage.addElements(new ArrayList<>(grouped.values()));
         }
 
         for (Element invalid : invalids) {
             storage.removeElement(invalid);
         }
+        storage.storage();
     }
 }

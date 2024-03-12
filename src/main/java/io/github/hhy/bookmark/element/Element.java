@@ -18,27 +18,16 @@ public record Element(Type elementType, String name,
 
     private static final String SEPARATOR = "#";
 
-    public Element {
-
-    }
-
-    public Element(Type elementType, String fileDescriptor, int linenumber) {
-        this(elementType, null, 0, fileDescriptor, linenumber, null, null);
-    }
-
-
-    public Element(Type elementType, String name) {
-        this(elementType, name, 0, null, -1, null, null);
-    }
-
-
     /**
      * createNewGroup
      *
      * @param name
      */
     public static Element createGroup(String name) {
-        return new Element(Type.GROUP, name);
+        return ElementBuilder.anElement()
+                .withElementType(Type.GROUP)
+                .withName(name)
+                .build();
     }
 
     /**
@@ -49,7 +38,11 @@ public record Element(Type elementType, String name,
      * @return
      */
     public static Element createBookmark(String fileDescriptor, int linenumber) {
-        return new Element(Type.BOOKMARK, fileDescriptor, linenumber);
+        return ElementBuilder.anElement()
+                .withElementType(Type.BOOKMARK)
+                .withFileDescriptor(fileDescriptor)
+                .withLinenumber(linenumber)
+                .build();
     }
 
     public String groupByKey() {
@@ -67,5 +60,16 @@ public record Element(Type elementType, String name,
             return -1;
         }
         return this.group.compareTo(o.group);
+    }
+
+    public static boolean elementEq(Element ele1, Element ele2) {
+        if (!ele1.elementType().equals(ele2.elementType())) {
+            return false;
+        }
+        if (ele1.elementType() == Type.GROUP) {
+            return ele1.name().equals(ele2.name());
+        }
+        return ele1.fileDescriptor().equals(ele2.fileDescriptor())
+                && ele1.linenumber() == ele2.linenumber();
     }
 }

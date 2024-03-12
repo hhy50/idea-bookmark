@@ -65,9 +65,9 @@ public class HighVersionBookManager implements MyBookmarkManager {
 
     @Override
     public Element getBookmark(Project project, String fileDescription, int lineNumber) {
+        Element bookmark = Element.createBookmark(fileDescription, lineNumber);
         for (Element element : getAllBookmarks(project)) {
-            if (element.elementType() != Type.BOOKMARK) continue;
-            if (element.fileDescriptor().equals(fileDescription) && element.linenumber() == lineNumber) {
+            if (Element.elementEq(element, bookmark)) {
                 return element;
             }
         }
@@ -133,10 +133,9 @@ public class HighVersionBookManager implements MyBookmarkManager {
             return file.getPath();
         }
         if (url.startsWith("jar://")) {
-            return url.substring(6);
-        }
-        if (url.startsWith("file://")) {
-            return url.substring(7);
+            url = url.substring(6);
+        } else if (url.startsWith("file://")) {
+            url = url.substring(7);
         }
         return url;
     }

@@ -2,9 +2,12 @@ package io.github.hhy.bookmark.storage;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import com.intellij.openapi.project.Project;
 import io.github.hhy.bookmark.element.Element;
+import io.github.hhy.bookmark.element.ElementBuilder;
 import io.github.hhy.bookmark.element.Type;
+import io.github.hhy.bookmark.util.FDUtil;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
@@ -13,24 +16,28 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
+import static io.github.hhy.bookmark.element.Element.elementEq;
+
 public class LocalFileStorage implements Storage {
 
     public static String DEFAULT_FILE = ".idea" + File.separator + "bookmarks.json";
 
     private Project project;
 
-    private Path file;
+    private final List<Element> elements = new ArrayList<>();
+
+    private Path storeFile;
 
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-    public LocalFileStorage(Project project) {
+    public LocalFileStorage(Project project) throws IOException {
         this.project = project;
-        this.file = Path.of(project.getBasePath(), DEFAULT_FILE);
+        this.storeFile = Path.of(project.getBasePath(), DEFAULT_FILE);
         this.checkFile();
     }
 
-    private void checkFile() {
-        File f = file.toFile();
+    private void checkFile() throws IOException {
+        File f = storeFile.toFile();
         if (!f.exists()) {
             try {
                 f.createNewFile();
@@ -38,69 +45,63 @@ public class LocalFileStorage implements Storage {
                 throw new RuntimeException(e);
             }
         }
+        elements.addAll(readFromLocalFile());
     }
 
     @Override
     public List<Element> getElements() throws IOException {
-        String fileStr = Files.readString(file);
-        if (StringUtils.isEmpty(fileStr)) {
-            return Collections.emptyList();
-        }
-        return Arrays.asList(gson.fromJson(fileStr, Element[].class));
+        return Collections.unmodifiableList(elements);
     }
 
     @Override
-    public void addElements(List<Element> adds) throws IOException {
+    public synchronized void addElements(List<Element> adds) throws IOException {
         List<Element> rem = new ArrayList<>();
-        List<Element> all = new ArrayList<>(getElements());
         for (Element ele : adds) {
-            List<Element> matched = all.stream().filter(item -> elementEq(item, ele)).toList();
+            List<Element> matched = elements.stream().filter(item -> elementEq(item, ele)).toList();
             rem.addAll(matched);
         }
-        all.removeAll(rem);
-        all.addAll(adds);
-        storage(all);
+        elements.removeAll(rem);
+        elements.addAll(adds
+//                .stream().map(item -> {
+//                    if (item.elementType() != Type.BOOKMARK) {
+//                        return item;
+//                    }
+//                    if (item.fileDescriptor().startsWith(project.getBasePath())) {
+//                        return ElementBuilder.anElement()
+//                                .withElementType(item.elementType())
+//                                .withName(item.name())
+//                                .withFileDescriptor(FDUtil.toRelative(item.fileDescriptor(), project.getBasePath()))
+//                                .withLinenumber(item.linenumber())
+//                                .withIndex(item.index())
+//                                .withBookmarkType(item.bookmarkType())
+//                                .withGroup(item.group())
+//                                .build();
+//                    }
+//                    return item;
+//                }).toList()
+        );
     }
 
     @Override
-    public void removeElement(Element element) throws IOException {
-        List<Element> elements = new ArrayList<>(getElements());
+    public synchronized void removeElement(Element element) throws IOException {
         Optional<Element> r = elements.stream().filter(item -> elementEq(item, element)).findFirst();
-        if (r.isPresent()) {
-            elements.remove(r.get());
-            storage(elements);
-        }
+        r.ifPresent(elements::remove);
     }
 
     @Override
-    public void storage(List<Element> elements) throws IOException {
-        if (elements == null || elements.size() == 0) {
-            Files.write(file, new byte[0]);
+    public void storage() throws IOException {
+        if (elements.size() == 0) {
+            Files.write(storeFile, new byte[0]);
             return;
         }
-        Collections.sort(elements);
-        Files.writeString(file, gson.toJson(elements));
+        Files.writeString(storeFile, gson.toJson(elements));
     }
 
-    @Override
-    public Element getBookmarkElement(String fileDescription, int linenumber) throws IOException {
-        Element target = Element.createBookmark(fileDescription, linenumber);
-        for (Element element : getElements()) {
-            if (elementEq(element, target)) {
-                return element;
-            }
-        }
-        return null;
-    }
+    private List<Element> readFromLocalFile() throws IOException {
+        String fileStr = Files.readString(storeFile);
+        if (StringUtils.isEmpty(fileStr)) Collections.emptyList();
 
-    public static boolean elementEq(Element ele1, Element ele2) {
-        if (!ele1.elementType().equals(ele2.elementType())) {
-            return false;
-        }
-        if (ele1.elementType() == Type.GROUP) {
-            return ele1.name().equals(ele2.name());
-        }
-        return ele1.fileDescriptor().equals(ele2.fileDescriptor())
-                && ele1.linenumber() == ele2.linenumber();
+        return gson.fromJson(fileStr, new TypeToken<List<Element>>() {
+        });
     }
 }

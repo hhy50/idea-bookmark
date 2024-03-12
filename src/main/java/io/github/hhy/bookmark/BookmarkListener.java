@@ -32,18 +32,20 @@ public class BookmarkListener implements BookmarksListener {
     }
 
     public void groupAdded(@NotNull BookmarkGroup group) {
-        Storage storage = Storage.getStorage(project);
         try {
+            Storage storage = Storage.getStorage(project);
             storage.addElement(Element.createGroup(group.getName()));
+            storage.storage();
         } catch (IOException e) {
             Notify.error(e.getMessage());
         }
     }
 
     public void groupRemoved(@NotNull BookmarkGroup group) {
-        Storage storage = Storage.getStorage(project);
         try {
+            Storage storage = Storage.getStorage(project);
             storage.removeElement(Element.createGroup(group.getName()));
+            storage.storage();
         } catch (IOException e) {
             Notify.error(e.getMessage());
         }
@@ -61,6 +63,7 @@ public class BookmarkListener implements BookmarksListener {
                 Storage storage = Storage.getStorage(project);
                 storage.addElement(Element.createGroup(group.getName()));
                 storage.addElements(affected);
+                storage.storage();
             }
         } catch (IOException e) {
             Notify.error("Bookmark synchronization failed!");
@@ -80,6 +83,7 @@ public class BookmarkListener implements BookmarksListener {
             if (element == null) return;
             Storage storage = Storage.getStorage(project);
             storage.addElement(element);
+            storage.storage();
         } catch (IOException e) {
             Notify.error("Bookmark synchronization failed!");
         }
@@ -103,6 +107,7 @@ public class BookmarkListener implements BookmarksListener {
                         .build();
                 storage.removeElement(element);
             }
+            storage.storage();
         } catch (IOException e) {
             Notify.error("Bookmark synchronization failed!");
         }
@@ -138,6 +143,7 @@ public class BookmarkListener implements BookmarksListener {
         if (element != null) {
             Storage storage = Storage.getStorage(project);
             storage.addElement(element);
+            storage.storage();
         }
     }
 }

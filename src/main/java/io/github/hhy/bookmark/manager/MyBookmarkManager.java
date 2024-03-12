@@ -37,7 +37,7 @@ public interface MyBookmarkManager {
      * @param fileDescription
      * @param lineNumber
      */
-    Element getBookmark(Project projetc, String fileDescription, int lineNumber);
+    Element getBookmark(Project project, String fileDescription, int lineNumber);
 
     /**
      * 删除无效的书签
