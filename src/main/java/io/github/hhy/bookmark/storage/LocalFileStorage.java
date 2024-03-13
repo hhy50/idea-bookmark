@@ -13,7 +13,7 @@ import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -98,7 +98,7 @@ public class LocalFileStorage implements Storage {
                         .build();
             }
             return item;
-        }).sorted().toList()), Charset.defaultCharset());
+        }).sorted().toList()), StandardCharsets.UTF_8);
     }
 
     private List<Element> readFromLocalFile() throws IOException {

@@ -69,7 +69,11 @@ public record Element(Type elementType, String name,
         if (ele1.elementType() == Type.GROUP) {
             return ele1.name().equals(ele2.name());
         }
-        return ele1.fileDescriptor().equals(ele2.fileDescriptor())
+        return pathEq(ele1.fileDescriptor(), ele2.fileDescriptor())
                 && ele1.linenumber() == ele2.linenumber();
+    }
+
+    private static boolean pathEq(String fd1, String fd2) {
+        return fd1.replaceAll("\\\\+", "/").equals(fd2.replaceAll("\\\\+", "/"));
     }
 }
