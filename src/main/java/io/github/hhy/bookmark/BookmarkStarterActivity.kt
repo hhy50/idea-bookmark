@@ -51,7 +51,7 @@ class BookmarkStarterActivity : ProjectActivity, ProjectManagerListener {
             myBookmarkManager.addBookmarks(project, noMatched)
         }
         val invalids = myBookmarkManager.removeInvalid(project)
-        if (grouped.size > 0) {
+        if (grouped.isNotEmpty()) {
             storage.addElements(ArrayList(grouped.values))
         }
         for (invalid in invalids) {

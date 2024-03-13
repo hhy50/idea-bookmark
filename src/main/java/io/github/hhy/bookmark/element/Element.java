@@ -1,5 +1,6 @@
 package io.github.hhy.bookmark.element;
 
+import io.github.hhy.bookmark.util.FDUtil;
 import org.jetbrains.annotations.NotNull;
 
 
@@ -49,7 +50,7 @@ public record Element(Type elementType, String name,
         if (this.elementType == Type.GROUP) {
             return "GROUP_" + SEPARATOR + this.name;
         }
-        return this.fileDescriptor + SEPARATOR + this.linenumber;
+        return FDUtil.formatSeparator(this.fileDescriptor) + SEPARATOR + this.linenumber;
     }
 
     @Override
@@ -74,6 +75,7 @@ public record Element(Type elementType, String name,
     }
 
     private static boolean pathEq(String fd1, String fd2) {
-        return fd1.replaceAll("\\\\+", "/").equals(fd2.replaceAll("\\\\+", "/"));
+        return FDUtil.formatSeparator(fd1)
+                .equals(FDUtil.formatSeparator(fd2));
     }
 }
