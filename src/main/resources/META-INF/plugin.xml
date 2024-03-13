@@ -34,11 +34,6 @@
      Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <depends>com.intellij.modules.platform</depends>
 
-    <applicationListeners>
-        <listener class="io.github.hhy.bookmark.BookmarkProject"
-                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
-    </applicationListeners>
-
     <extensions defaultExtensionNs="com.intellij">
         <postStartupActivity implementation="io.github.hhy.bookmark.BookmarkStarterActivity"/>
     </extensions>
