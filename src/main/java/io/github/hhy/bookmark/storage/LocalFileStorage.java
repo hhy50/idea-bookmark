@@ -86,18 +86,15 @@ public class LocalFileStorage implements Storage {
             if (item.elementType() != Type.BOOKMARK) {
                 return item;
             }
-            if (item.fileDescriptor().startsWith(project.getBasePath())) {
-                return ElementBuilder.anElement()
-                        .withElementType(item.elementType())
-                        .withName(item.name())
-                        .withFileDescriptor(FDUtil.toRelative(item.fileDescriptor(), project.getBasePath()))
-                        .withLinenumber(item.linenumber())
-                        .withIndex(item.index())
-                        .withBookmarkType(item.bookmarkType())
-                        .withGroup(item.group())
-                        .build();
-            }
-            return item;
+            return ElementBuilder.anElement()
+                    .withElementType(item.elementType())
+                    .withName(item.name())
+                    .withFileDescriptor(FDUtil.toRelative(item.fileDescriptor(), project.getBasePath()))
+                    .withLinenumber(item.linenumber())
+                    .withIndex(item.index())
+                    .withBookmarkType(item.bookmarkType())
+                    .withGroup(item.group())
+                    .build();
         }).sorted().toList()), StandardCharsets.UTF_8);
     }
 

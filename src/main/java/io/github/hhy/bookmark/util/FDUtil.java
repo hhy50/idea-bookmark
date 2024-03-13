@@ -8,6 +8,11 @@ public class FDUtil {
     public static final String PROJECT_RELATIVE = "$";
 
     public static String toRelative(String fd, String basePath) {
+        basePath = formatSeparator(basePath);
+        fd = formatSeparator(fd);
+        if (!fd.startsWith(basePath)) {
+            return fd;
+        }
         fd = fd.substring(basePath.length());
         return formatSeparator(Path.of("$", fd).toString());
     }
