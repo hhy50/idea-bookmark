@@ -47,6 +47,7 @@ public class LocalFileStorage implements Storage {
         try {
             if (!f.exists()) {
                 f.createNewFile();
+                Files.writeString(storeFile, "[]");
             }
             elements.addAll(readFromLocalFile());
         } catch (IOException e) {
@@ -102,8 +103,12 @@ public class LocalFileStorage implements Storage {
         String fileStr = Files.readString(storeFile);
         if (StringUtils.isEmpty(fileStr)) Collections.emptyList();
 
-        return gson.fromJson(fileStr, new TypeToken<List<Element>>() {
-        }).stream().map(item -> {
+        List<Element> elements = gson.fromJson(fileStr, new TypeToken<List<Element>>() {
+        });
+        if (elements == null) {
+            return Collections.emptyList();
+        }
+        return elements.stream().map(item -> {
             if (item.elementType() != Type.BOOKMARK) {
                 return item;
             }
