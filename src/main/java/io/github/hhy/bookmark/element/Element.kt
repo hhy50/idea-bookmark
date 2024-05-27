@@ -3,34 +3,32 @@ package io.github.hhy.bookmark.element
 import io.github.hhy.bookmark.util.FDUtil
 
 
-class Element(
+open class Element(
     val elementType: ElementType,
-    val name: String,
-    var index: Int,
-    var fileDescriptor: String?,
-    var linenumber: Int?,
-    var group: String?,
-    var bookmarkType: String?
 ) {
-
-
     companion object {
         const val SEPARATOR = "#"
 
         @JvmStatic
-        fun withGroup(groupName: String): Element = Element(ElementType.GROUP, groupName, -1, null, null, null, null)
+        fun withGroup(groupName: String): GroupElement = GroupElement(groupName)
 
         @JvmStatic
-        fun withBookmark(fileDescriptor: String, linenumber: Int): Element =
-            Element(ElementType.BOOKMARK, fileDescriptor, linenumber, null, null, null, null)
+        fun withBookmark(
+            fileDescriptor: String, linenumber: Int,
+            name: String = "",
+            group: String = "",
+            bookmarkType: String = "",
+        ): BookmarkElement =
+            BookmarkElement(fileDescriptor, linenumber, name, group, bookmarkType)
     }
-
 
     fun groupByKey(): String {
-        return if (elementType == ElementType.GROUP) {
+        return if (this is GroupElement) {
             "GROUP_${SEPARATOR}$name"
-        } else
+        } else if (this is BookmarkElement) {
             "${FDUtil.formatSeparator(fileDescriptor)}$SEPARATOR$linenumber"
+        } else {
+            ""
+        }
     }
-
 }

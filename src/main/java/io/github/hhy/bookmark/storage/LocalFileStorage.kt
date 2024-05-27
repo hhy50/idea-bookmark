@@ -4,8 +4,9 @@ import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.io.FileUtil
+import io.github.hhy.bookmark.element.BookmarkElement
 import io.github.hhy.bookmark.element.Element
-import io.github.hhy.bookmark.element.ElementType
+import io.github.hhy.bookmark.element.GroupElement
 import io.github.hhy.bookmark.util.FDUtil
 import org.apache.commons.lang.StringUtils
 import java.io.File
@@ -18,7 +19,7 @@ class LocalFileStorage(private val project: Project) : Storage {
 
     companion object {
         @JvmField
-        val DEFAULT_FILE = ".idea${File.pathSeparator}bookmarks.json"
+        val DEFAULT_FILE = ".idea${File.separator}bookmarks.json"
     }
 
     val storeFile: Path = project.basePath?.let { Path.of(it, DEFAULT_FILE) }!!
@@ -32,8 +33,27 @@ class LocalFileStorage(private val project: Project) : Storage {
 
     override fun elements(): List<Element> = elements
 
-    override fun findElement(withGroup: Element): Element? {
-        TODO("Not yet implemented")
+    override fun findElement(element: Element): Element? {
+        val equalFunc: (Element) -> Boolean = fun(target: Element): Boolean {
+            if (target.elementType != element.elementType) {
+                return false
+            }
+
+            return if (target is GroupElement && element is GroupElement) {
+                target.name == element.name
+            } else if (target is BookmarkElement && element is BookmarkElement) {
+                FDUtil.toRelative(target.fileDescriptor, project.basePath) == FDUtil.toRelative(
+                    element.fileDescriptor,
+                    project.basePath
+                )
+                        && target.linenumber == element.linenumber
+            } else {
+                false
+            }
+        }
+        return elements.find { it ->
+            equalFunc(it)
+        }
     }
 
     override fun addElement(ele: Element) {
@@ -56,7 +76,7 @@ class LocalFileStorage(private val project: Project) : Storage {
         FileUtil.writeToFile(
             storeFile.toFile(),
             GSON.toJson(elements.map {
-                if (it.elementType == ElementType.BOOKMARK) {
+                if (it is BookmarkElement) {
                     it.fileDescriptor = FDUtil.toRelative(it.fileDescriptor, project.basePath)
                 }
                 it
@@ -79,13 +99,22 @@ class LocalFileStorage(private val project: Project) : Storage {
         val fileStr = Files.readString(storeFile)
         if (StringUtils.isEmpty(fileStr)) emptyList<Element>()
 
-        val elements: List<Element> = GSON.fromJson(fileStr, object : TypeToken<List<Element>>() {})
-            ?: return emptyList<Element>()
+        val elements: List<Map<String, String>> =
+            GSON.fromJson(fileStr, object : TypeToken<List<Map<String, String>>>() {})
+                ?: return emptyList()
+
         return elements.map { item ->
-            if (item.elementType == ElementType.BOOKMARK) {
-                item.fileDescriptor = FDUtil.toAbsolute(item.fileDescriptor, project.basePath)
+            if (item["elementType"] == "BOOKMARK") {
+                Element.withBookmark(
+                    item["fileDescriptor"]?.let { FDUtil.toAbsolute(it, project.basePath) } ?: "",
+                    item["linenumber"]?.toInt() ?: -1,
+                    item["name"] ?: "",
+                    item["group"] ?: "",
+                    item["bookmarkType"] ?: "",
+                )
+            } else {
+                Element.withGroup(item["name"] ?: "")
             }
-            item
         }
     }
 }

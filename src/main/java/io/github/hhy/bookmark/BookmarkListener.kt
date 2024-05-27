@@ -6,6 +6,7 @@ import com.intellij.ide.bookmark.BookmarksListener
 import com.intellij.ide.bookmark.providers.FileBookmarkImpl
 import com.intellij.ide.bookmark.providers.LineBookmarkImpl
 import com.intellij.openapi.project.Project
+import io.github.hhy.bookmark.element.BookmarkElement
 import io.github.hhy.bookmark.element.Element
 import io.github.hhy.bookmark.notify.Notify
 import io.github.hhy.bookmark.storage.Storage
@@ -37,12 +38,11 @@ class BookmarkListener(val project: Project) : BookmarksListener {
         try {
             val storage = Storage.getStorage(project)
             for (bookmark in group.getBookmarks()) {
-                val element = bookmark.toEle()
-                if (element != null) {
-                    storage.findElement(element)?.let {
+                val element = bookmark.toBookmarkElement()
+                (storage.findElement(element) as? BookmarkElement)
+                    ?.let {
                         it.group = group.name
                     }
-                }
             }
             storage.addElement(Element.withGroup(group.name))
             storage.storage()
@@ -53,12 +53,12 @@ class BookmarkListener(val project: Project) : BookmarksListener {
 
     override fun bookmarkAdded(group: BookmarkGroup, bookmark: Bookmark) {
         try {
-            val element = bookmark.toEle()
-            if (element != null) {
-                val storage = Storage.getStorage(project)
-                storage.addElement(element)
-                storage.storage()
-            }
+            var element = bookmark.toBookmarkElement()
+                .let {
+                    val storage = Storage.getStorage(project)
+                    storage.addElement(it)
+                    storage.storage()
+                }
         } catch (e: Exception) {
             Notify.error("Bookmark synchronization failed! msg=${e.message}")
         }
@@ -66,12 +66,12 @@ class BookmarkListener(val project: Project) : BookmarksListener {
 
     override fun bookmarkRemoved(group: BookmarkGroup, bookmark: Bookmark) {
         try {
-            val element = bookmark.toEle()
-            if (element != null) {
-                val storage = Storage.getStorage(project)
-                storage.removeElement(element)
-                storage.storage()
-            }
+            bookmark.toBookmarkElement()
+                .let {
+                    val storage = Storage.getStorage(project)
+                    storage.removeElement(it)
+                    storage.storage()
+                }
         } catch (e: Exception) {
             Notify.error("Bookmark synchronization failed! msg=${e.message}")
         }
@@ -82,15 +82,16 @@ class BookmarkListener(val project: Project) : BookmarksListener {
 
     private fun changed(group: BookmarkGroup?, bookmark: Bookmark) {
         try {
-            val element = bookmark.toEle()?.also {
-                // TODO
-                it.group = group?.name
-            }
-            if (element != null) {
-                val storage = Storage.getStorage(project)
-                storage.addElement(element)
-                storage.storage()
-            }
+            val element = bookmark.toBookmarkElement()
+                .also {
+                    // TODO
+                    it.group = group?.name ?: ""
+                }
+                .let {
+                    val storage = Storage.getStorage(project)
+                    storage.addElement(it)
+                    storage.storage()
+                }
         } catch (e: Exception) {
             Notify.error("Bookmark synchronization failed! msg=${e.message}")
         }
@@ -98,10 +99,10 @@ class BookmarkListener(val project: Project) : BookmarksListener {
 }
 
 
-fun Bookmark.toEle(): Element? {
+fun Bookmark.toBookmarkElement(): BookmarkElement {
     return when (this) {
         is LineBookmarkImpl -> Element.withBookmark(this.descriptor.file.path, this.line)
         is FileBookmarkImpl -> Element.withBookmark(this.descriptor.file.path, -1)
-        else -> null
+        else -> throw RuntimeException()
     }
 }
