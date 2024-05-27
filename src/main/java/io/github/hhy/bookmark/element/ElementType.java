@@ -1,6 +1,6 @@
 package io.github.hhy.bookmark.element;
 
-public enum Type {
+public enum ElementType {
     BOOKMARK(),
 
     GROUP(),
@@ -8,6 +8,6 @@ public enum Type {
     ;
 
 
-    Type() {
+    ElementType() {
     }
 }

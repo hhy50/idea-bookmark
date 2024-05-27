@@ -1,7 +1,7 @@
 package io.github.hhy.bookmark.element;
 
 public class ElementBuilder {
-    private Type elementType;
+    private ElementType elementType;
     private String name;
     private int index;
     private String fileDescriptor;
@@ -16,7 +16,7 @@ public class ElementBuilder {
         return new ElementBuilder();
     }
 
-    public ElementBuilder withElementType(Type elementType) {
+    public ElementBuilder withElementType(ElementType elementType) {
         this.elementType = elementType;
         return this;
     }

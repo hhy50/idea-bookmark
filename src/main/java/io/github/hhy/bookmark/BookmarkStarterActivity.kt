@@ -10,8 +10,6 @@ import io.github.hhy.bookmark.notify.Notify
 import io.github.hhy.bookmark.storage.Storage
 import org.apache.commons.collections.CollectionUtils
 import java.io.IOException
-import java.util.function.Function
-import java.util.stream.Collectors
 
 
 class BookmarkStarterActivity : ProjectActivity, ProjectManagerListener {
@@ -30,31 +28,31 @@ class BookmarkStarterActivity : ProjectActivity, ProjectManagerListener {
         }
     }
 
-    override fun projectClosing(project: Project) {
-        Storage.removeStoreCache(project)
-    }
 
     @Throws(IOException::class)
-    fun load(project: Project?, storage: Storage) {
-        val myBookmarkManager = MyBookmarkManager.getBookmarkManager()
-        val noMatched: MutableList<Element?> = ArrayList()
-        val grouped = myBookmarkManager.getAllBookmarks(project).stream()
-                .collect(Collectors.toMap(Function { obj: Element -> obj.groupByKey() }, Function.identity()))
-        for (element in storage.elements) {
-            val existEle = grouped[element.groupByKey()]
-            if (existEle != null) {
+    fun load(project: Project, storage: Storage) {
+        val myBookmarkManager = MyBookmarkManager.bookmarkManager
+        val noMatched: MutableList<Element> = ArrayList()
+        val grouped: MutableMap<String, Element> = myBookmarkManager
+            .getAllBookmarks(project).associateBy { it.groupByKey() } as MutableMap<String, Element>
+
+        for (element in storage.elements()) {
+            if (element.groupByKey() in grouped) {
                 grouped.remove(element.groupByKey())
-            } else noMatched.add(element)
+            } else {
+                noMatched.add(element)
+            }
         }
         if (CollectionUtils.isNotEmpty(noMatched)) {
             // recovery
             myBookmarkManager.addBookmarks(project, noMatched)
         }
-        val invalids = myBookmarkManager.removeInvalid(project)
         if (grouped.isNotEmpty()) {
-            storage.addElements(ArrayList(grouped.values))
+            grouped.values.forEach {
+                storage.addElement(it)
+            }
         }
-        for (invalid in invalids) {
+        for (invalid in myBookmarkManager.removeInvalid(project)) {
             storage.removeElement(invalid)
         }
         storage.storage()
