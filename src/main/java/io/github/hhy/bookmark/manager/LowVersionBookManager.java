@@ -1,29 +1,39 @@
 package io.github.hhy.bookmark.manager;
 
+import com.intellij.ide.bookmark.Bookmark;
+import com.intellij.ide.bookmark.BookmarkGroup;
 import com.intellij.openapi.project.Project;
-import io.github.hhy.bookmark.element.Element;
-import kotlin.Pair;
+import io.github.hhy.bookmark.element.BookmarkElement;
+import io.github.hhy.bookmark.element.GroupElement;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class LowVersionBookManager implements MyBookmarkManager {
 
+    @NotNull
     @Override
-    public List<Element> getAllBookmarks(Project project) {
-        List<Element> result = new ArrayList<>();
-        return result;
-    }
-
-    @Override
-    public void addBookmarks(@NotNull Project project, @NotNull List<? extends Element> elements) {
+    public Map<String, Map<String, BookmarkElement>> getAllBookmarks(@NotNull Project project) {
+        return null;
     }
 
     @NotNull
     @Override
-    public List<Pair<String, Integer>> removeInvalid(@Nullable Project project) {
+    public BookmarkGroup addGroup(@NotNull Project project, @NotNull GroupElement ele) {
+        return null;
+    }
+
+    @NotNull
+    @Override
+    public Bookmark addBookmark(@NotNull Project project, @NotNull BookmarkElement ele) {
+        return null;
+    }
+
+    @NotNull
+    @Override
+    public List<Bookmark> removeInvalid(@NotNull Project project) {
         return new ArrayList<>();
     }
 }

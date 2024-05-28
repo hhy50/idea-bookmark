@@ -4,11 +4,14 @@ import com.intellij.ide.bookmark.BookmarksListener
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManagerListener
 import com.intellij.openapi.startup.ProjectActivity
+import io.github.hhy.bookmark.element.BookmarkElement
 import io.github.hhy.bookmark.element.Element
+import io.github.hhy.bookmark.element.GroupElement
+import io.github.hhy.bookmark.element.key
 import io.github.hhy.bookmark.manager.MyBookmarkManager
 import io.github.hhy.bookmark.notify.Notify
 import io.github.hhy.bookmark.storage.Storage
-import org.apache.commons.collections.CollectionUtils
+import kotlinx.coroutines.delay
 import java.io.IOException
 
 
@@ -21,7 +24,7 @@ class BookmarkStarterActivity : ProjectActivity, ProjectManagerListener {
 
             // start listener
             val connect = project.messageBus.connect()
-            connect.subscribe(BookmarksListener.TOPIC, BookmarkListener(project))
+            connect.subscribe(BookmarksListener.TOPIC, BookmarkListener(project, storage))
         } catch (e: Exception) {
             e.printStackTrace()
             Notify.error(e.message)
@@ -32,30 +35,40 @@ class BookmarkStarterActivity : ProjectActivity, ProjectManagerListener {
     @Throws(IOException::class)
     fun load(project: Project, storage: Storage) {
         val myBookmarkManager = MyBookmarkManager.bookmarkManager
-        val noMatched: MutableList<Element> = ArrayList()
-        val grouped: MutableMap<String, Element> = myBookmarkManager
-            .getAllBookmarks(project).associateBy { it.groupByKey() } as MutableMap<String, Element>
+        val existedGroup = myBookmarkManager.getAllBookmarks(project)
+        val backups = storage.elements()
 
-        for (element in storage.elements()) {
-            if (element.groupByKey() in grouped) {
-                grouped.remove(element.groupByKey())
-            } else {
-                noMatched.add(element)
+        // 缺少的
+        val missingElements: MutableList<Element> = ArrayList()
+        for (group in backups) {
+            val bookmarks = existedGroup[group.name] ?: emptyMap()
+            if (bookmarks.isEmpty()) {
+                missingElements.add(group)
+                missingElements.addAll(group.bookmarks.values)
+                continue
+            }
+            // 少的
+            for (bookmarkEntry in group.bookmarks) {
+                if (bookmarkEntry.key !in bookmarks) {
+                    missingElements.add(bookmarkEntry.value)
+                }
+                (bookmarks as MutableMap).remove(bookmarkEntry.key)
             }
         }
-        if (CollectionUtils.isNotEmpty(noMatched)) {
-            // recovery
-            myBookmarkManager.addBookmarks(project, noMatched)
+        // 多的
+        existedGroup.forEach { (_, group) ->
+            for (bookmark in group.values) {
+                storage.addBookmark(bookmark)
+            }
         }
-        if (grouped.isNotEmpty()) {
-            grouped.values.forEach {
-                storage.addElement(it)
+        for (missingElement in missingElements) {
+            when(missingElement) {
+                is BookmarkElement -> myBookmarkManager.addBookmark(project, missingElement)
+                is GroupElement -> myBookmarkManager.addGroup(project, missingElement)
             }
         }
         for (invalid in myBookmarkManager.removeInvalid(project)) {
-            storage.removeElement {
-                false
-            }
+            storage.removeBookmark(invalid.key())
         }
         storage.storage()
     }

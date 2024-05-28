@@ -24,61 +24,57 @@ class LocalFileStorage(private val project: Project) : Storage {
 
     val storeFile: Path = project.basePath?.let { Path.of(it, DEFAULT_FILE) }!!
     val GSON = GsonBuilder().setPrettyPrinting().create()
-    val elements: MutableList<Element> = arrayListOf()
+    val elements: MutableMap<String, GroupElement>
 
     init {
         this.checkFile()
-        this.elements.addAll(readLocal())
+        this.elements = HashMap(readLocal())
     }
 
-    override fun elements(): List<Element> = elements
+    override fun elements(): List<GroupElement> = ArrayList(elements.values)
 
-    override fun findElement(element: Element): Element? {
-        val equalFunc: (Element) -> Boolean = fun(target: Element): Boolean {
-            if (target.elementType != element.elementType) {
-                return false
-            }
+    override fun getGroup(name: String): GroupElement? = this.elements[name]
 
-            return if (target is GroupElement && element is GroupElement) {
-                target.name == element.name
-            } else if (target is BookmarkElement && element is BookmarkElement) {
-                FDUtil.toRelative(target.fileDescriptor, project.basePath) == FDUtil.toRelative(
-                    element.fileDescriptor,
-                    project.basePath
-                )
-                        && target.linenumber == element.linenumber
-            } else {
-                false
+    override fun addGroup(ele: GroupElement) {
+        this.elements[ele.name] = ele
+    }
+
+    override fun removeGroup(name: String): GroupElement? = this.elements.remove(name)
+
+    override fun getBookmark(key: String): BookmarkElement? {
+        for ((_, groupEle) in this.elements) {
+            groupEle.bookmarks[key]?.also {
+                return@getBookmark it
             }
         }
-        return elements.find { it ->
-            equalFunc(it)
-        }
+        return null
     }
 
-    override fun addElement(ele: Element) {
-        removeElement(ele).let {
-            elements.add(ele)
-        }
+    override fun addBookmark(ele: BookmarkElement) {
+        val group: GroupElement = getGroup(ele.group) ?: Element.withGroup(ele.group).also { addGroup(it) }
+        group.addBookmark(ele)
     }
 
-    override fun removeElement(condition: (Element) -> Boolean) {
-        this.elements.removeIf(condition)
+    override fun removeBookmark(key: String): BookmarkElement? {
+        return getBookmark(key)?.let {
+            this.elements[it.group]?.removeBookmark(key)
+        }
     }
 
     override fun storage() {
-        if (elements.size == 0) {
-            Files.writeString(storeFile, "[]")
+        if (elements.isEmpty()) {
+            Files.writeString(storeFile, "{}")
             return
+        }
+        val bookmarks: Map<String, List<BookmarkElement>> = elements.mapValues { (groupName, groupElement) ->
+            groupElement.bookmarks.values.map {
+                it.fileDescriptor = FDUtil.toRelative(it.fileDescriptor, project.basePath)
+                it
+            }
         }
         FileUtil.writeToFile(
             storeFile.toFile(),
-            GSON.toJson(elements.map {
-                if (it is BookmarkElement) {
-                    it.fileDescriptor = FDUtil.toRelative(it.fileDescriptor, project.basePath)
-                }
-                it
-            }),
+            GSON.toJson(bookmarks),
             StandardCharsets.UTF_8
         )
     }
@@ -88,31 +84,22 @@ class LocalFileStorage(private val project: Project) : Storage {
         if (!file.exists()) {
             file.parentFile.mkdirs()
             file.createNewFile()
-            Files.writeString(storeFile, "[]");
+            Files.writeString(storeFile, "{}");
         }
     }
 
     @Throws(IOException::class)
-    private fun readLocal(): List<Element> {
+    private fun readLocal(): Map<String, GroupElement> {
         val fileStr = Files.readString(storeFile)
         if (StringUtils.isEmpty(fileStr)) emptyList<Element>()
 
-        val elements: List<Map<String, String>> =
-            GSON.fromJson(fileStr, object : TypeToken<List<Map<String, String>>>() {})
-                ?: return emptyList()
-
-        return elements.map { item ->
-            if (item["elementType"] == "BOOKMARK") {
-                Element.withBookmark(
-                    item["fileDescriptor"]?.let { FDUtil.toAbsolute(it, project.basePath) } ?: "",
-                    item["linenumber"]?.toInt() ?: -1,
-                    item["name"] ?: "",
-                    item["group"] ?: "",
-                    item["bookmarkType"] ?: "",
-                )
-            } else {
-                Element.withGroup(item["name"] ?: "")
+        val backups = GSON.fromJson(fileStr, object : TypeToken<Map<String, List<BookmarkElement>>>() {})
+            ?: return emptyMap()
+        return backups.mapValues { (groupName, bookmarks) ->
+            bookmarks.forEach {
+                it.fileDescriptor = FDUtil.toAbsolute(it.fileDescriptor, project.basePath)
             }
+            Element.withGroup(groupName, bookmarks)
         }
     }
 }

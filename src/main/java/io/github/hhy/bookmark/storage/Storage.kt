@@ -4,8 +4,8 @@ import com.intellij.openapi.extensions.DefaultPluginDescriptor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.impl.ProjectImpl
 import io.github.hhy.bookmark.PluginInfo
-import io.github.hhy.bookmark.element.Element
-import org.apache.xmlbeans.xml.stream.events.ElementTypeNames
+import io.github.hhy.bookmark.element.BookmarkElement
+import io.github.hhy.bookmark.element.GroupElement
 
 sealed interface Storage {
 
@@ -27,22 +27,37 @@ sealed interface Storage {
     /**
      * 获取存储的全部书签
      */
-    fun elements(): List<Element>
+    fun elements(): List<GroupElement>
 
     /**
-     * 获取单个
+     * 获取某个组
      */
-    fun findElement(withGroup: Element): Element?
+    fun getGroup(name: String): GroupElement?
 
     /**
-     * 添加
+     * 添加组
      */
-    fun addElement(ele: Element): Unit
+    fun addGroup(ele: GroupElement)
 
     /**
-     * 删除
+     * 删除某个组
      */
-    fun removeElement(condition: (Element) -> Boolean)
+    fun removeGroup(name: String): GroupElement?
+
+    /**
+     * 获取单个书签
+     */
+    fun getBookmark(key: String): BookmarkElement?
+
+    /**
+     * 添加书签
+     */
+    fun addBookmark(ele: BookmarkElement)
+
+    /**
+     * 删除书签
+     */
+    fun removeBookmark(key: String): BookmarkElement?
 
     /**
      * 存储

@@ -5,88 +5,66 @@ import com.intellij.openapi.project.Project
 import io.github.hhy.bookmark.element.BookmarkElement
 import io.github.hhy.bookmark.element.Element
 import io.github.hhy.bookmark.element.GroupElement
-import io.github.hhy.bookmark.notify.Notify
-import org.apache.commons.collections.CollectionUtils
-import org.apache.commons.lang.StringUtils
+import io.github.hhy.bookmark.util.FDUtil
 import java.io.File
 
 class HighVersionBookManager : MyBookmarkManager {
 
-    override fun getAllBookmarks(project: Project): List<Element> {
+    override fun getAllBookmarks(project: Project): Map<String, Map<String, BookmarkElement>> {
         val bookmarkManager = project.getService(BookmarksManager::class.java)
         if (bookmarkManager is BookmarksManagerImpl) {
-            return bookmarkManager.state.groups.map { group ->
-                listOf(Element.withGroup(group.name), *group.bookmarks.map { bookmark ->
-                    val attr = bookmark.attributes
-                    Element.withBookmark(
+            return bookmarkManager.state.groups.associate { group ->
+                group.name to group.bookmarks.associate {
+                    val attr = it.attributes
+                    val ele = Element.withBookmark(
                         attr["url"]!!.let(HighVersionBookManager::urlToFileDescriptor),
                         attr["line"]?.let(Integer::parseInt) ?: -1,
-                        bookmark.description ?: "",
+                        it.description ?: "",
                         group.name,
-                        bookmark.type.toString()
+                        it.type.toString()
                     )
-                }.toTypedArray())
-            }.flatten()
-        }
-        return emptyList()
-    }
-
-    override fun addBookmarks(project: Project, elements: List<Element>) {
-        if (CollectionUtils.isEmpty(elements)) return
-        val bookmarksManager = project.getService(BookmarksManager::class.java)
-        for (element in elements) {
-            try {
-                when (element) {
-                    is GroupElement -> addGroup(bookmarksManager, element.name)
-                    is BookmarkElement -> {
-                        val group: BookmarkGroup = addGroup(bookmarksManager, element.group)
-                        addBookmark(bookmarksManager, group, element)
-                    }
+                    ele.key() to ele
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                Notify.error(e.message)
             }
         }
+        return emptyMap()
     }
 
-    override fun removeInvalid(project: Project): List<Pair<String, Int>> {
-        val invalid: MutableList<Pair<String, Int>> = ArrayList()
+    override fun addGroup(project: Project, ele: GroupElement): BookmarkGroup {
+        val bookmarksManager = project.getService(BookmarksManager::class.java)
+        return bookmarksManager.getGroup(ele.name) ?: return bookmarksManager.addGroup(ele.name, false)!!
+    }
+
+    override fun addBookmark(project: Project, ele: BookmarkElement): Bookmark {
+        val bookmarksManager = project.getService(BookmarksManager::class.java)
+        val group: BookmarkGroup = addGroup(project, Element.withGroup(ele.group))
+        val type: BookmarkType = BookmarkType.valueOf(ele.bookmarkType)
+        val bookmarkState = BookmarkState().also {
+            it.provider = "com.intellij.ide.bookmark.providers.LineBookmarkProvider"
+            it.description = ele.name
+            it.type = type
+            it.attributes["url"] = fileDescriptorToUrl(ele.fileDescriptor)
+            if (ele.linenumber != -1) {
+                it.attributes["line"] = java.lang.String.valueOf(ele.linenumber)
+            }
+        }
+        val bookmark = bookmarksManager.createBookmark(bookmarkState)
+        return bookmark?.also {
+            group.add(bookmark, type, ele.name)
+        } ?: throw RuntimeException()
+    }
+
+    override fun removeInvalid(project: Project): List<Bookmark> {
+        val invalid: MutableList<Bookmark> = ArrayList()
         val bookmarksManager = project.getService(BookmarksManager::class.java)
         for (bookmark in bookmarksManager.bookmarks) {
             if (bookmark::class.java.name.contains("InvalidBookmark")) {
-                val attr = bookmark.attributes
-                invalid += (attr["url"] ?: "") to (attr["line"]?.toInt() ?: -1)
                 bookmarksManager.remove(bookmark)
+                invalid += bookmark
             }
         }
         return invalid
     }
-
-    private fun addGroup(bookmarksManager: BookmarksManager, groupName: String): BookmarkGroup {
-        return bookmarksManager.getGroup(groupName) ?: return bookmarksManager.addGroup(groupName, false)!!
-    }
-
-    private fun addBookmark(bookmarksManager: BookmarksManager, group: BookmarkGroup, element: BookmarkElement) {
-        if (StringUtils.isNotEmpty(element.fileDescriptor)) {
-            val type: BookmarkType = BookmarkType.valueOf(element.bookmarkType)
-            val bookmarkState = BookmarkState()
-            bookmarkState.provider = "com.intellij.ide.bookmark.providers.LineBookmarkProvider"
-            bookmarkState.description = element.name
-            bookmarkState.type = type
-
-            bookmarkState.attributes["url"] = fileDescriptorToUrl(element.fileDescriptor)
-            element.linenumber.let {
-                bookmarkState.attributes["line"] = java.lang.String.valueOf(it)
-            }
-            val bookmark = bookmarksManager.createBookmark(bookmarkState)
-            if (bookmark != null) {
-                val success = group.add(bookmark, type, element.name)
-                if (!success) Notify.error("Bookmark add fail, description:[$element]")
-            }
-        }
-    }
-
 
     companion object {
         @JvmStatic
@@ -95,13 +73,14 @@ class HighVersionBookManager : MyBookmarkManager {
             if (file.exists()) {
                 return file.path
             }
-            return if (url.startsWith("jar://")) {
+            var url = if (url.startsWith("jar://")) {
                 url.substring(6)
             } else if (url.startsWith("file://")) {
                 url.substring(7)
             } else {
                 url
             }
+            return FDUtil.formatSeparator(url)
         }
 
         @JvmStatic
@@ -113,11 +92,3 @@ class HighVersionBookManager : MyBookmarkManager {
         }
     }
 }
-
-//fun BookmarkState.toEle() : BookmarkElement {
-//    val attr = this.attributes
-//    return Element.withBookmark(
-//        attr["url"]!!.let(HighVersionBookManager::urlToFileDescriptor),
-//        attr["line"]?.let(Integer::parseInt) ?: -1
-//    )
-//}

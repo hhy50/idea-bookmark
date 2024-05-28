@@ -18,6 +18,10 @@ public class FDUtil {
     }
 
     public static String toAbsolute(String fd, String basePath) {
+        return formatSeparator(toAbsolute0(fd, basePath));
+    }
+
+    private static String toAbsolute0(String fd, String basePath) {
         File file = new File(fd);
         if (file.exists() && file.isFile()) {
             return fd;
