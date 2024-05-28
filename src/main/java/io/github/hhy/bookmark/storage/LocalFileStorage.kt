@@ -31,16 +31,32 @@ class LocalFileStorage(private val project: Project) : Storage {
         this.elements = HashMap(readLocal())
     }
 
+    @Synchronized
     override fun elements(): List<GroupElement> = ArrayList(elements.values)
 
+    @Synchronized
     override fun getGroup(name: String): GroupElement? = this.elements[name]
 
+    @Synchronized
     override fun addGroup(ele: GroupElement) {
-        this.elements[ele.name] = ele
+        if (ele.name !in this.elements) {
+            this.elements[ele.name] = ele
+        }
     }
 
+    @Synchronized
     override fun removeGroup(name: String): GroupElement? = this.elements.remove(name)
 
+    @Synchronized
+    override fun renameGroup(groupName: String, newGroupName: String) {
+        this.elements[newGroupName] = this.elements[groupName]!!
+        this.elements[newGroupName]!!.bookmarks.forEach { (key, bookmarkEle) ->
+            bookmarkEle.group = newGroupName
+        }
+        removeGroup(groupName)
+    }
+
+    @Synchronized
     override fun getBookmark(key: String): BookmarkElement? {
         for ((_, groupEle) in this.elements) {
             groupEle.bookmarks[key]?.also {
@@ -50,17 +66,22 @@ class LocalFileStorage(private val project: Project) : Storage {
         return null
     }
 
+    @Synchronized
     override fun addBookmark(ele: BookmarkElement) {
         val group: GroupElement = getGroup(ele.group) ?: Element.withGroup(ele.group).also { addGroup(it) }
-        group.addBookmark(ele)
-    }
-
-    override fun removeBookmark(key: String): BookmarkElement? {
-        return getBookmark(key)?.let {
-            this.elements[it.group]?.removeBookmark(key)
+        if (ele.key() !in group.bookmarks) {
+            group.bookmarks[ele.key()] = ele
         }
     }
 
+    @Synchronized
+    override fun removeBookmark(key: String): BookmarkElement? {
+        return getBookmark(key)?.let {
+            this.elements[it.group]?.bookmarks?.remove(key)
+        }
+    }
+
+    @Synchronized
     override fun storage() {
         if (elements.isEmpty()) {
             Files.writeString(storeFile, "{}")
@@ -103,3 +124,5 @@ class LocalFileStorage(private val project: Project) : Storage {
         }
     }
 }
+
+

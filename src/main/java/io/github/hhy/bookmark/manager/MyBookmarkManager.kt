@@ -2,6 +2,7 @@ package io.github.hhy.bookmark.manager
 
 import com.intellij.ide.bookmark.Bookmark
 import com.intellij.ide.bookmark.BookmarkGroup
+import com.intellij.ide.bookmark.BookmarkState
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.project.Project
 import io.github.hhy.bookmark.element.BookmarkElement
@@ -14,7 +15,7 @@ interface MyBookmarkManager {
      *
      * @return
      */
-    fun getAllBookmarks(project: Project): Map<String, Map<String, BookmarkElement>>
+    fun getAllBookmarks(project: Project): Map<String /* groupName */, Map<String /* bookmarkElementKey */, BookmarkElement>>
 
     /**
      * Add

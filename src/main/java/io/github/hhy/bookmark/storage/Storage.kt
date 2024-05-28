@@ -45,6 +45,11 @@ sealed interface Storage {
     fun removeGroup(name: String): GroupElement?
 
     /**
+     * 重命名组
+     */
+    fun renameGroup(groupName: String, newGroupName: String)
+
+    /**
      * 获取单个书签
      */
     fun getBookmark(key: String): BookmarkElement?

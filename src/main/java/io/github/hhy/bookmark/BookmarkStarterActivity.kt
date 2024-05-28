@@ -11,7 +11,6 @@ import io.github.hhy.bookmark.element.key
 import io.github.hhy.bookmark.manager.MyBookmarkManager
 import io.github.hhy.bookmark.notify.Notify
 import io.github.hhy.bookmark.storage.Storage
-import kotlinx.coroutines.delay
 import java.io.IOException
 
 
@@ -30,7 +29,6 @@ class BookmarkStarterActivity : ProjectActivity, ProjectManagerListener {
             Notify.error(e.message)
         }
     }
-
 
     @Throws(IOException::class)
     fun load(project: Project, storage: Storage) {
@@ -56,7 +54,7 @@ class BookmarkStarterActivity : ProjectActivity, ProjectManagerListener {
             }
         }
         // 多的
-        existedGroup.forEach { (_, group) ->
+        existedGroup.forEach { (groupName, group) ->
             for (bookmark in group.values) {
                 storage.addBookmark(bookmark)
             }
