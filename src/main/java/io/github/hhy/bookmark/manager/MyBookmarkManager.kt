@@ -25,7 +25,7 @@ interface MyBookmarkManager {
      *
      * @param project
      */
-    fun removeInvalid(project: Project): List<Element> {
+    fun removeInvalid(project: Project): List<Pair<String, Int>> {
         return emptyList()
     }
 

@@ -2,6 +2,7 @@ package io.github.hhy.bookmark.manager;
 
 import com.intellij.openapi.project.Project;
 import io.github.hhy.bookmark.element.Element;
+import kotlin.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -22,7 +23,7 @@ public class LowVersionBookManager implements MyBookmarkManager {
 
     @NotNull
     @Override
-    public List<Element> removeInvalid(@Nullable Project project) {
+    public List<Pair<String, Integer>> removeInvalid(@Nullable Project project) {
         return new ArrayList<>();
     }
 }

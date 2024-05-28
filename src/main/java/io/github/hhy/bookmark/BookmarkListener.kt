@@ -8,6 +8,7 @@ import com.intellij.ide.bookmark.providers.LineBookmarkImpl
 import com.intellij.openapi.project.Project
 import io.github.hhy.bookmark.element.BookmarkElement
 import io.github.hhy.bookmark.element.Element
+import io.github.hhy.bookmark.element.ElementType
 import io.github.hhy.bookmark.notify.Notify
 import io.github.hhy.bookmark.storage.Storage
 import java.io.IOException
@@ -27,7 +28,10 @@ class BookmarkListener(val project: Project) : BookmarksListener {
     override fun groupRemoved(group: BookmarkGroup) {
         try {
             val storage = Storage.getStorage(project)
-            storage.removeElement(Element.withGroup(group.name))
+            storage.removeElement {
+                it.elementType == ElementType.GROUP &&
+                        it.name = group.name
+            }
             storage.storage()
         } catch (e: IOException) {
             Notify.error("Bookmark synchronization failed! msg=${e.message}")

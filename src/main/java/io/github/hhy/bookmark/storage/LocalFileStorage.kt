@@ -62,10 +62,8 @@ class LocalFileStorage(private val project: Project) : Storage {
         }
     }
 
-    override fun removeElement(ele: Element): Element? {
-        return findElement(ele)?.also {
-            elements.remove(it)
-        }
+    override fun removeElement(condition: (Element) -> Boolean) {
+        this.elements.removeIf(condition)
     }
 
     override fun storage() {

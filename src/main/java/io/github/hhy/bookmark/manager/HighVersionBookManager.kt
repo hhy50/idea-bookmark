@@ -17,11 +17,14 @@ class HighVersionBookManager : MyBookmarkManager {
         if (bookmarkManager is BookmarksManagerImpl) {
             return bookmarkManager.state.groups.map { group ->
                 listOf(Element.withGroup(group.name), *group.bookmarks.map { bookmark ->
-                    bookmark.toEle().also {
-                        it.name = bookmark.description ?: ""
-                        it.group = group.name
-                        it.bookmarkType = bookmark.type.toString()
-                    }
+                    val attr = bookmark.attributes
+                    Element.withBookmark(
+                        attr["url"]!!.let(HighVersionBookManager::urlToFileDescriptor),
+                        attr["line"]?.let(Integer::parseInt) ?: -1,
+                        bookmark.description ?: "",
+                        group.name,
+                        bookmark.type.toString()
+                    )
                 }.toTypedArray())
             }.flatten()
         }
@@ -47,15 +50,14 @@ class HighVersionBookManager : MyBookmarkManager {
         }
     }
 
-    override fun removeInvalid(project: Project): List<Element> {
-        val invalid: MutableList<Element> = ArrayList()
+    override fun removeInvalid(project: Project): List<Pair<String, Int>> {
+        val invalid: MutableList<Pair<String, Int>> = ArrayList()
         val bookmarksManager = project.getService(BookmarksManager::class.java)
         for (bookmark in bookmarksManager.bookmarks) {
             if (bookmark::class.java.name.contains("InvalidBookmark")) {
-                bookmarksManager.remove(bookmark)
                 val attr = bookmark.attributes
-                val ele: Element = Element.withBookmark(attr["url"] ?: "", attr["line"]?.toInt() ?: -1)
-                invalid.add(ele)
+                invalid += (attr["url"] ?: "") to (attr["line"]?.toInt() ?: -1)
+                bookmarksManager.remove(bookmark)
             }
         }
         return invalid
@@ -112,10 +114,10 @@ class HighVersionBookManager : MyBookmarkManager {
     }
 }
 
-fun BookmarkState.toEle() : BookmarkElement {
-    val attr = this.attributes
-    return Element.withBookmark(
-        attr["url"]!!.let(HighVersionBookManager::urlToFileDescriptor),
-        attr["line"]?.let(Integer::parseInt) ?: -1
-    )
-}
+//fun BookmarkState.toEle() : BookmarkElement {
+//    val attr = this.attributes
+//    return Element.withBookmark(
+//        attr["url"]!!.let(HighVersionBookManager::urlToFileDescriptor),
+//        attr["line"]?.let(Integer::parseInt) ?: -1
+//    )
+//}

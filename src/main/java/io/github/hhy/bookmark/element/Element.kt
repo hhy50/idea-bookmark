@@ -5,6 +5,7 @@ import io.github.hhy.bookmark.util.FDUtil
 
 open class Element(
     val elementType: ElementType,
+    val name: String,
 ) {
     companion object {
         const val SEPARATOR = "#"
@@ -15,9 +16,9 @@ open class Element(
         @JvmStatic
         fun withBookmark(
             fileDescriptor: String, linenumber: Int,
-            name: String = "",
-            group: String = "",
-            bookmarkType: String = "",
+            name: String ,
+            group: String,
+            bookmarkType: String,
         ): BookmarkElement =
             BookmarkElement(fileDescriptor, linenumber, name, group, bookmarkType)
     }

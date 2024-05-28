@@ -53,7 +53,9 @@ class BookmarkStarterActivity : ProjectActivity, ProjectManagerListener {
             }
         }
         for (invalid in myBookmarkManager.removeInvalid(project)) {
-            storage.removeElement(invalid)
+            storage.removeElement {
+                false
+            }
         }
         storage.storage()
     }

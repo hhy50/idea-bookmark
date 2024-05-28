@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.impl.ProjectImpl
 import io.github.hhy.bookmark.PluginInfo
 import io.github.hhy.bookmark.element.Element
+import org.apache.xmlbeans.xml.stream.events.ElementTypeNames
 
 sealed interface Storage {
 
@@ -41,7 +42,7 @@ sealed interface Storage {
     /**
      * 删除
      */
-    fun removeElement(ele: Element): Element?
+    fun removeElement(condition: (Element) -> Boolean)
 
     /**
      * 存储

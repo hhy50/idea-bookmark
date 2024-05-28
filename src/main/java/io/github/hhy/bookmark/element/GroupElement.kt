@@ -1,6 +1,6 @@
 package io.github.hhy.bookmark.element
 
-class GroupElement(val name :String) : Element(ElementType.GROUP) {
+class GroupElement(groupName :String) : Element(ElementType.GROUP, groupName) {
 
 
 
