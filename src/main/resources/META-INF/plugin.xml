@@ -36,13 +36,11 @@
     <depends>com.intellij.modules.platform</depends>
 
     <extensions defaultExtensionNs="com.intellij">
+        <projectService
+                serviceInterface="io.github.hhy.bookmark.storage.Storage"
+                serviceImplementation="io.github.hhy.bookmark.storage.LocalFileStorage"/>
         <postStartupActivity implementation="io.github.hhy.bookmark.BookmarkStarterActivity"/>
     </extensions>
-
-    <projectListeners>
-        <listener class="io.github.hhy.bookmark.LowVersionBookmarkListener"
-                  topic="com.intellij.ide.bookmarks.BookmarksListener"/>
-    </projectListeners>
 
     <actions>
 

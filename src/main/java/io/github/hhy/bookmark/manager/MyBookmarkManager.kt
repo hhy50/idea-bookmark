@@ -39,12 +39,6 @@ interface MyBookmarkManager {
     }
 
     companion object {
-        val bookmarkManager: MyBookmarkManager
-            get() {
-                val build = ApplicationInfo.getInstance().build
-                return if (build.baselineVersion >= 231) {
-                    HighVersionBookManager()
-                } else LowVersionBookManager()
-            }
+        val bookmarkManager: MyBookmarkManager = HighVersionBookManager()
     }
 }

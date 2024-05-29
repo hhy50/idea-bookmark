@@ -107,7 +107,7 @@ class LocalFileStorage(private val project: Project) : Storage {
     @Throws(IOException::class)
     private fun readLocal(): Map<String, GroupElement> {
         val fileStr = Files.readString(storeFile)
-        if (StringUtils.isEmpty(fileStr)) emptyList<Element>()
+        if (fileStr.isEmpty()) emptyList<Element>()
 
         val backups = GSON.fromJson(fileStr, object : TypeToken<Map<String, List<BookmarkElement>>>() {})
             ?: return emptyMap()
