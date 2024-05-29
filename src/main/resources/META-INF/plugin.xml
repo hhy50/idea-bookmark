@@ -23,7 +23,8 @@
     <!-- Product and plugin compatibility requirements.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
     <description><![CDATA[
-            <p>本插件可以将idea书签保存到本地和git仓库, 方便不同设备间书签的管理</p>
+            <p>This plugin can synchronize bookmarks to a local file (stored by default in the $project/. idea/bookmarks. json file), facilitating the management and synchronization of bookmarks between different devices</p>
+            <p>本插件可以将书签同步到本地文件（默认存储在：$project/.idea/bookmarks.json文件）, 方便不同设备间书签的管理和同步</p>
             github: <a href="https://github.com/haiyanghan/idea-bookmark">@github</a>
             <br />
             qq群: 904726708
