@@ -38,6 +38,11 @@
         <postStartupActivity implementation="io.github.hhy.bookmark.BookmarkStarterActivity"/>
     </extensions>
 
+    <projectListeners>
+        <listener class="io.github.hhy.bookmark.LowVersionBookmarkListener"
+                  topic="com.intellij.ide.bookmarks.BookmarksListener"/>
+    </projectListeners>
+
     <actions>
 
     </actions>

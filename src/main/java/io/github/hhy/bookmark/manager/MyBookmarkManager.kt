@@ -27,7 +27,7 @@ interface MyBookmarkManager {
     /**
      *
      */
-    fun addBookmark(project: Project, groupName :String, ele: BookmarkElement): Bookmark
+    fun addBookmark(project: Project, groupName :String, ele: BookmarkElement)
 
     /**
      * 删除无效的书签

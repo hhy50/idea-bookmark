@@ -34,7 +34,7 @@ class HighVersionBookManager : MyBookmarkManager {
         return bookmarksManager.getGroup(ele.name) ?: return bookmarksManager.addGroup(ele.name, false)!!
     }
 
-    override fun addBookmark(project: Project, groupName: String, ele: BookmarkElement): Bookmark {
+    override fun addBookmark(project: Project, groupName: String, ele: BookmarkElement) {
         val bookmarksManager = project.getService(BookmarksManager::class.java)
         val group: BookmarkGroup = addGroup(project, Element.withGroup(groupName))
         val type: BookmarkType = BookmarkType.valueOf(ele.bookmarkType)
@@ -48,9 +48,9 @@ class HighVersionBookManager : MyBookmarkManager {
             }
         }
         val bookmark = bookmarksManager.createBookmark(bookmarkState)
-        return bookmark?.also {
+        bookmark?.also {
             group.add(bookmark, type, ele.name)
-        } ?: throw RuntimeException()
+        }
     }
 
     override fun removeInvalid(project: Project): List<Bookmark> {

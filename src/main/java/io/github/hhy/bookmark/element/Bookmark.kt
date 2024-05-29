@@ -22,3 +22,13 @@ fun Bookmark.linenumber(): Int {
         else -> throw RuntimeException()
     }
 }
+
+
+fun com.intellij.ide.bookmarks.Bookmark.key(): String =
+    "${this.fileDescriptor()}${Element.SEPARATOR}${this.linenumber()}"
+
+fun com.intellij.ide.bookmarks.Bookmark.fileDescriptor(): String =
+    FDUtil.formatSeparator(this.file.path)
+
+fun com.intellij.ide.bookmarks.Bookmark.linenumber() = this.line
+
