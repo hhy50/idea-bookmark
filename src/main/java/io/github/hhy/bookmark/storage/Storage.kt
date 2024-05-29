@@ -57,12 +57,12 @@ sealed interface Storage {
     /**
      * 添加书签
      */
-    fun addBookmark(ele: BookmarkElement)
+    fun addBookmark(groupName: String, ele: BookmarkElement)
 
     /**
      * 删除书签
      */
-    fun removeBookmark(key: String): BookmarkElement?
+    fun removeBookmark(groupName: String, key: String): BookmarkElement?
 
     /**
      * 存储

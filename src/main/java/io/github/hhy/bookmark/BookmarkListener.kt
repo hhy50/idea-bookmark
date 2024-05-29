@@ -1,8 +1,14 @@
 package io.github.hhy.bookmark
 
-import com.intellij.ide.bookmark.*
+import com.intellij.ide.bookmark.Bookmark
+import com.intellij.ide.bookmark.BookmarkGroup
+import com.intellij.ide.bookmark.BookmarksListener
+import com.intellij.ide.bookmark.BookmarksManager
 import com.intellij.openapi.project.Project
-import io.github.hhy.bookmark.element.*
+import io.github.hhy.bookmark.element.Element
+import io.github.hhy.bookmark.element.fileDescriptor
+import io.github.hhy.bookmark.element.key
+import io.github.hhy.bookmark.element.linenumber
 import io.github.hhy.bookmark.manager.MyBookmarkManager
 import io.github.hhy.bookmark.notify.Notify
 import io.github.hhy.bookmark.storage.Storage
@@ -36,11 +42,10 @@ class BookmarkListener(val project: Project, val storage: Storage) : BookmarksLi
             when (bookmarks.size) {
                 0 -> groupAdded(group)
                 else -> {
-                    storage.getBookmark(bookmarks[0].key())?.group?.let { groupName ->
-                        storage.getGroup(groupName)?.also {
-                            storage.renameGroup(groupName, group.name)
-                        }
-                    }
+                    val groupElement = storage.elements().filter {
+                        bookmarks[0].key() in it.bookmarks
+                    }[0]
+                    storage.renameGroup(groupElement.name, group.name)
                 }
             }
             storage.storage()
@@ -52,9 +57,10 @@ class BookmarkListener(val project: Project, val storage: Storage) : BookmarksLi
     override fun bookmarkAdded(group: BookmarkGroup, bookmark: Bookmark) {
         try {
             storage.addBookmark(
+                group.name,
                 Element.withBookmark(
                     bookmark.fileDescriptor(), bookmark.linenumber(),
-                    getBookmarkName(group.name, bookmark.key()), group.name,
+                    getBookmarkName(group.name, bookmark.key()),
                     bookmarksManager.getType(bookmark)!!.toString()
                 )
             )
@@ -66,7 +72,7 @@ class BookmarkListener(val project: Project, val storage: Storage) : BookmarksLi
 
     override fun bookmarkRemoved(group: BookmarkGroup, bookmark: Bookmark) {
         try {
-            storage.removeBookmark(bookmark.key())
+            storage.removeBookmark(group.name, bookmark.key())
             storage.storage()
         } catch (e: Exception) {
             Notify.error("Bookmark synchronization failed! msg=${e.message}")
@@ -77,17 +83,6 @@ class BookmarkListener(val project: Project, val storage: Storage) : BookmarksLi
         try {
             storage.getBookmark(bookmark.key())!!.let {
                 it.name = getBookmarkName(group.name, bookmark.key())
-                it.group = group.name
-            }
-            storage.storage()
-        } catch (e: Exception) {
-            Notify.error("Bookmark synchronization failed! msg=${e.message}")
-        }
-    }
-
-    override fun bookmarkTypeChanged(bookmark: Bookmark) {
-        try {
-            storage.getBookmark(bookmark.key())!!.let {
                 it.bookmarkType = bookmarksManager.getType(bookmark)!!.toString()
             }
             storage.storage()
@@ -96,14 +91,15 @@ class BookmarkListener(val project: Project, val storage: Storage) : BookmarksLi
         }
     }
 
+    override fun bookmarkTypeChanged(bookmark: Bookmark) {
+        val groups = bookmarksManager.groups
+        bookmarkChanged(groups[0], bookmark)
+    }
+
     /**
-     * 获取指定书签的持久化数据
+     * 获取书签名称
      */
     private fun getBookmarkName(groupName: String, key: String): String {
-//        fun BookmarksManagerImpl.getBookmarkName(bookmark: Bookmark) {
-//            this.groups
-//        }
-
         val allBookmarks = MyBookmarkManager.bookmarkManager.getAllBookmarks(project)
         return allBookmarks[groupName]?.get(key)?.name ?: ""
     }

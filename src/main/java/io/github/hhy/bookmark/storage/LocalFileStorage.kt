@@ -50,9 +50,6 @@ class LocalFileStorage(private val project: Project) : Storage {
     @Synchronized
     override fun renameGroup(groupName: String, newGroupName: String) {
         this.elements[newGroupName] = this.elements[groupName]!!
-        this.elements[newGroupName]!!.bookmarks.forEach { (key, bookmarkEle) ->
-            bookmarkEle.group = newGroupName
-        }
         removeGroup(groupName)
     }
 
@@ -67,18 +64,16 @@ class LocalFileStorage(private val project: Project) : Storage {
     }
 
     @Synchronized
-    override fun addBookmark(ele: BookmarkElement) {
-        val group: GroupElement = getGroup(ele.group) ?: Element.withGroup(ele.group).also { addGroup(it) }
+    override fun addBookmark(groupName: String, ele: BookmarkElement) {
+        val group: GroupElement = getGroup(groupName) ?: Element.withGroup(groupName).also { addGroup(it) }
         if (ele.key() !in group.bookmarks) {
             group.bookmarks[ele.key()] = ele
         }
     }
 
     @Synchronized
-    override fun removeBookmark(key: String): BookmarkElement? {
-        return getBookmark(key)?.let {
-            this.elements[it.group]?.bookmarks?.remove(key)
-        }
+    override fun removeBookmark(groupName: String, key: String): BookmarkElement? {
+        return this.elements[groupName]?.bookmarks?.remove(key)
     }
 
     @Synchronized

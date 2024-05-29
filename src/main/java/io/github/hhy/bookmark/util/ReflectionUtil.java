@@ -53,7 +53,6 @@ public class ReflectionUtil {
     }
 
     /**
-     * TODO  value对应的类型为基本数据类型, 需要调用对应的set方法
      *
      * @param obj
      * @param fieldName

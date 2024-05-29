@@ -2,7 +2,6 @@ package io.github.hhy.bookmark.manager
 
 import com.intellij.ide.bookmark.Bookmark
 import com.intellij.ide.bookmark.BookmarkGroup
-import com.intellij.ide.bookmark.BookmarkState
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.project.Project
 import io.github.hhy.bookmark.element.BookmarkElement
@@ -28,7 +27,7 @@ interface MyBookmarkManager {
     /**
      *
      */
-    fun addBookmark(project: Project, ele: BookmarkElement): Bookmark
+    fun addBookmark(project: Project, groupName :String, ele: BookmarkElement): Bookmark
 
     /**
      * 删除无效的书签

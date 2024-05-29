@@ -4,7 +4,6 @@ class BookmarkElement(
     var fileDescriptor: String,
     var linenumber: Int,
     var name: String,
-    var group: String,
     var bookmarkType: String
 ) : Element() {
 

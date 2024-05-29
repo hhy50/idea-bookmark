@@ -7,7 +7,7 @@ import io.github.hhy.bookmark.element.BookmarkElement;
 import io.github.hhy.bookmark.element.GroupElement;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -27,13 +27,13 @@ public class LowVersionBookManager implements MyBookmarkManager {
 
     @NotNull
     @Override
-    public Bookmark addBookmark(@NotNull Project project, @NotNull BookmarkElement ele) {
+    public Bookmark addBookmark(@NotNull Project project, @NotNull String groupName, @NotNull BookmarkElement ele) {
         return null;
     }
 
     @NotNull
     @Override
     public List<Bookmark> removeInvalid(@NotNull Project project) {
-        return new ArrayList<>();
+        return Collections.emptyList();
     }
 }

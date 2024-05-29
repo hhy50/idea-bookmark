@@ -13,9 +13,8 @@ open class Element {
         fun withBookmark(
             fileDescriptor: String, linenumber: Int,
             name: String,
-            group: String,
             bookmarkType: String,
         ): BookmarkElement =
-            BookmarkElement(fileDescriptor, linenumber, name, group, bookmarkType)
+            BookmarkElement(fileDescriptor, linenumber, name, bookmarkType)
     }
 }

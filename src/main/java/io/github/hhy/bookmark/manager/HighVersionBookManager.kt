@@ -20,7 +20,6 @@ class HighVersionBookManager : MyBookmarkManager {
                         attr["url"]!!.let(HighVersionBookManager::urlToFileDescriptor),
                         attr["line"]?.let(Integer::parseInt) ?: -1,
                         it.description ?: "",
-                        group.name,
                         it.type.toString()
                     )
                     ele.key() to ele
@@ -35,9 +34,9 @@ class HighVersionBookManager : MyBookmarkManager {
         return bookmarksManager.getGroup(ele.name) ?: return bookmarksManager.addGroup(ele.name, false)!!
     }
 
-    override fun addBookmark(project: Project, ele: BookmarkElement): Bookmark {
+    override fun addBookmark(project: Project, groupName: String, ele: BookmarkElement): Bookmark {
         val bookmarksManager = project.getService(BookmarksManager::class.java)
-        val group: BookmarkGroup = addGroup(project, Element.withGroup(ele.group))
+        val group: BookmarkGroup = addGroup(project, Element.withGroup(groupName))
         val type: BookmarkType = BookmarkType.valueOf(ele.bookmarkType)
         val bookmarkState = BookmarkState().also {
             it.provider = "com.intellij.ide.bookmark.providers.LineBookmarkProvider"
