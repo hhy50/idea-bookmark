@@ -2,7 +2,6 @@ package io.github.hhy.bookmark.manager
 
 import com.intellij.ide.bookmark.Bookmark
 import com.intellij.ide.bookmark.BookmarkGroup
-import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.project.Project
 import io.github.hhy.bookmark.element.BookmarkElement
 import io.github.hhy.bookmark.element.GroupElement

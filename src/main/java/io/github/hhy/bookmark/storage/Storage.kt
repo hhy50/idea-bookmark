@@ -1,13 +1,6 @@
 package io.github.hhy.bookmark.storage
 
-import com.intellij.openapi.components.ComponentManager
-import com.intellij.openapi.components.ServiceManager
-import com.intellij.openapi.extensions.DefaultPluginDescriptor
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.impl.ProjectImpl
-import com.intellij.testFramework.registerComponentInstance
-import com.intellij.testFramework.replaceService
-import io.github.hhy.bookmark.PluginInfo
 import io.github.hhy.bookmark.element.BookmarkElement
 import io.github.hhy.bookmark.element.GroupElement
 

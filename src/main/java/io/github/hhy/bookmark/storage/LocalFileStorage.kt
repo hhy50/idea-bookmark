@@ -4,11 +4,8 @@ import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.io.FileUtil
-import io.github.hhy.bookmark.element.BookmarkElement
-import io.github.hhy.bookmark.element.Element
-import io.github.hhy.bookmark.element.GroupElement
+import io.github.hhy.bookmark.element.*
 import io.github.hhy.bookmark.util.FDUtil
-import org.apache.commons.lang.StringUtils
 import java.io.File
 import java.io.IOException
 import java.nio.charset.StandardCharsets
@@ -109,8 +106,17 @@ class LocalFileStorage(private val project: Project) : Storage {
         val fileStr = Files.readString(storeFile)
         if (fileStr.isEmpty()) emptyList<Element>()
 
-        val backups = GSON.fromJson(fileStr, object : TypeToken<Map<String, List<BookmarkElement>>>() {})
-            ?: return emptyMap()
+        val backups: Map<String, List<BookmarkElement>> = if (fileStr.startsWith("[")) {
+            GSON.fromJson(fileStr, object : TypeToken<ElementList>() {})
+                ?.filter { it.elementType == ElementType.BOOKMARK }
+                ?.groupBy(ElementList.Item::group)?.mapValues {
+                    it.value.map(ElementList.Item::toElement)
+                }
+                ?: return emptyMap()
+        } else {
+            GSON.fromJson(fileStr, object : TypeToken<Map<String, List<BookmarkElement>>>() {})
+                ?: return emptyMap()
+        }
         return backups.mapValues { (groupName, bookmarks) ->
             bookmarks.forEach {
                 it.fileDescriptor = FDUtil.toAbsolute(it.fileDescriptor, project.basePath)
