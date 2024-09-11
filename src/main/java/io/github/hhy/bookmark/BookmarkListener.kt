@@ -93,7 +93,12 @@ class BookmarkListener(val project: Project, val storage: Storage) : BookmarksLi
 
     override fun bookmarkTypeChanged(bookmark: Bookmark) {
         val groups = bookmarksManager.groups
-        bookmarkChanged(groups[0], bookmark)
+        for (group in groups) {
+            if (group.getBookmarks().contains(bookmark)) {
+                bookmarkChanged(group, bookmark)
+                break
+            }
+        }
     }
 
     /**
