@@ -6,6 +6,8 @@ import java.nio.file.Path;
 public class FDUtil {
 
     public static final String PROJECT_RELATIVE = "$";
+    public static final String MVN_RELATIVE = "$MVN";
+    public static final String JDK_RELATIVE = "$JDK";
 
     public static String toRelative(String fd, String basePath) {
         basePath = formatSeparator(basePath);

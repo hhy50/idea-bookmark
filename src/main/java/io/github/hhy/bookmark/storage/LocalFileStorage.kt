@@ -21,66 +21,64 @@ class LocalFileStorage(private val project: Project) : Storage {
 
     val storeFile: Path = project.basePath?.let { Path.of(it, DEFAULT_FILE) }!!
     val GSON = GsonBuilder().setPrettyPrinting().create()
-    val elements: MutableMap<String, GroupElement>
+    val groups: MutableMap<String, GroupElement>
 
     init {
         this.checkFile()
-        this.elements = HashMap(readLocal())
+        this.groups = HashMap(readLocal())
     }
 
     @Synchronized
-    override fun elements(): List<GroupElement> = ArrayList(elements.values)
+    override fun elements(): List<GroupElement> = ArrayList(groups.values)
 
     @Synchronized
-    override fun getGroup(name: String): GroupElement? = this.elements[name]
+    override fun getGroup(name: String): GroupElement? = this.groups[name]
 
     @Synchronized
     override fun addGroup(ele: GroupElement) {
-        if (ele.name !in this.elements) {
-            this.elements[ele.name] = ele
+        if (ele.name !in this.groups) {
+            this.groups[ele.name] = ele
         }
     }
 
     @Synchronized
-    override fun removeGroup(name: String): GroupElement? = this.elements.remove(name)
+    override fun removeGroup(name: String): GroupElement? = this.groups.remove(name)
 
     @Synchronized
     override fun renameGroup(groupName: String, newGroupName: String) {
-        this.elements[newGroupName] = this.elements[groupName]!!
+        this.groups[newGroupName] = this.groups[groupName]!!
         removeGroup(groupName)
     }
 
     @Synchronized
     override fun getBookmark(key: String): BookmarkElement? {
-        for ((_, groupEle) in this.elements) {
-            groupEle.bookmarks[key]?.also {
-                return@getBookmark it
-            }
-        }
-        return null
+        return this.groups.values.map { it.bookmarks }
+            .flatten().firstOrNull { it.name == key }
     }
 
     @Synchronized
     override fun addBookmark(groupName: String, ele: BookmarkElement) {
         val group: GroupElement = getGroup(groupName) ?: Element.withGroup(groupName).also { addGroup(it) }
-        if (ele.key() !in group.bookmarks) {
-            group.bookmarks[ele.key()] = ele
+        val bookmark = getBookmark(ele.key())
+        if (bookmark == null) {
+            group.bookmarks.add(0, ele)
         }
     }
 
     @Synchronized
     override fun removeBookmark(groupName: String, key: String): BookmarkElement? {
-        return this.elements[groupName]?.bookmarks?.remove(key)
+        val group: GroupElement = getGroup(groupName) ?: Element.withGroup(groupName).also { addGroup(it) }
+        return getBookmark(key)?.also { group.bookmarks.remove(it) }
     }
 
     @Synchronized
     override fun storage() {
-        if (elements.isEmpty()) {
+        if (groups.isEmpty()) {
             Files.writeString(storeFile, "{}")
             return
         }
-        val bookmarks: Map<String, List<BookmarkElement>> = elements.mapValues { (groupName, groupElement) ->
-            groupElement.bookmarks.values.map {
+        val bookmarks: Map<String, List<BookmarkElement>> = groups.mapValues { (_, group) ->
+            group.bookmarks.map {
                 it.fileDescriptor = FDUtil.toRelative(it.fileDescriptor, project.basePath)
                 it
             }

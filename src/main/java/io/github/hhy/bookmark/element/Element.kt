@@ -6,8 +6,8 @@ open class Element {
         const val SEPARATOR = "#"
 
         @JvmStatic
-        fun withGroup(groupName: String, bookmarks: List<BookmarkElement> = listOf()): GroupElement =
-            GroupElement(groupName, HashMap(bookmarks.associateBy { it.key() }))
+        fun withGroup(groupName: String, bookmarks: MutableList<BookmarkElement> = arrayListOf()): GroupElement =
+            GroupElement(groupName, bookmarks)
 
         @JvmStatic
         fun withBookmark(
