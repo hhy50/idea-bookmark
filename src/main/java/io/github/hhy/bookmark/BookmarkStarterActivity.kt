@@ -40,13 +40,13 @@ class BookmarkStarterActivity : ProjectActivity, ProjectManagerListener {
         val backups = storage.elements()
 
         for (group in backups) {
-            val existBookmarks = existedGroup[group.name] ?: emptyMap()
-            if (existBookmarks.isEmpty()) {
+            val existBookmarks = existedGroup[group.name]
+            if (existBookmarks == null) {
                 recoveryGroup(project, group)
                 continue
             }
 
-            val notExist = group.bookmarks.filterKeys {
+            val notExist = group.bookmarks.associateBy { it.key() }.filterKeys {
                 (existBookmarks as MutableMap).remove(it)
                 it !in existBookmarks
             }
@@ -77,7 +77,7 @@ class BookmarkStarterActivity : ProjectActivity, ProjectManagerListener {
      */
     private fun recoveryGroup(project: Project, group: GroupElement) {
         myBookmarkManager.addGroup(project, Element.withGroup(group.name))
-        for (bookmarkEle in group.bookmarks.values) {
+        for (bookmarkEle in group.bookmarks) {
             myBookmarkManager.addBookmark(project, group.name, bookmarkEle)
         }
     }

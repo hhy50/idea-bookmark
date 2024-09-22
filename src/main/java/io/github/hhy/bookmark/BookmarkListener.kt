@@ -42,10 +42,12 @@ class BookmarkListener(val project: Project, val storage: Storage) : BookmarksLi
             when (bookmarks.size) {
                 0 -> groupAdded(group)
                 else -> {
-                    val groupElement = storage.elements().filter {
-                        bookmarks[0].key() in it.bookmarks
-                    }[0]
-                    storage.renameGroup(groupElement.name, group.name)
+                    val first = storage.elements().firstOrNull {
+                        it.bookmarks.any { b -> b.key() == bookmarks[0].key() }
+                    }
+                    first?.also {
+                        storage.renameGroup(it.name, group.name)
+                    }
                 }
             }
             storage.storage()

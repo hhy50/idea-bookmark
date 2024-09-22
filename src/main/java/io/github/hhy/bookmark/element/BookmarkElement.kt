@@ -1,6 +1,6 @@
 package io.github.hhy.bookmark.element
 
-class BookmarkElement(
+data class BookmarkElement(
     var fileDescriptor: String,
     var linenumber: Int,
     var name: String,
@@ -8,5 +8,12 @@ class BookmarkElement(
 ) : Element() {
 
     fun key(): String = "${this.fileDescriptor}${SEPARATOR}${this.linenumber}"
+
+    fun clone(): BookmarkElement = BookmarkElement(
+        this.fileDescriptor,
+        this.linenumber,
+        this.name,
+        this.bookmarkType
+    )
 }
 

@@ -53,7 +53,7 @@ class LocalFileStorage(private val project: Project) : Storage {
     @Synchronized
     override fun getBookmark(key: String): BookmarkElement? {
         return this.groups.values.map { it.bookmarks }
-            .flatten().firstOrNull { it.name == key }
+            .flatten().firstOrNull { it.key() == key }
     }
 
     @Synchronized
@@ -79,8 +79,9 @@ class LocalFileStorage(private val project: Project) : Storage {
         }
         val bookmarks: Map<String, List<BookmarkElement>> = groups.mapValues { (_, group) ->
             group.bookmarks.map {
-                it.fileDescriptor = FDUtil.toRelative(it.fileDescriptor, project.basePath)
-                it
+                val iit = it.clone()
+                iit.fileDescriptor = FDUtil.toRelative(iit.fileDescriptor, project.basePath)
+                iit
             }
         }
         FileUtil.writeToFile(
@@ -119,7 +120,7 @@ class LocalFileStorage(private val project: Project) : Storage {
             bookmarks.forEach {
                 it.fileDescriptor = FDUtil.toAbsolute(it.fileDescriptor, project.basePath)
             }
-            Element.withGroup(groupName, bookmarks)
+            Element.withGroup(groupName, bookmarks as MutableList)
         }
     }
 }
