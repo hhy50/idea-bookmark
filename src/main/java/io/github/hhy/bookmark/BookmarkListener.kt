@@ -4,21 +4,25 @@ import com.intellij.ide.bookmark.Bookmark
 import com.intellij.ide.bookmark.BookmarkGroup
 import com.intellij.ide.bookmark.BookmarksListener
 import com.intellij.ide.bookmark.BookmarksManager
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import io.github.hhy.bookmark.element.Element
 import io.github.hhy.bookmark.element.fileDescriptor
 import io.github.hhy.bookmark.element.key
 import io.github.hhy.bookmark.element.linenumber
-import io.github.hhy.bookmark.manager.MyBookmarkManager
 import io.github.hhy.bookmark.notify.Notify
 import io.github.hhy.bookmark.storage.Storage
 import java.io.IOException
 
 class BookmarkListener(val project: Project, val storage: Storage) : BookmarksListener {
+    companion object {
+        val LOG: Logger = Logger.getInstance(BookmarkListener::class.java)
+    }
 
     val bookmarksManager: BookmarksManager = project.getService(BookmarksManager::class.java)
 
     override fun groupAdded(group: BookmarkGroup) {
+        LOG.info("groupAdded - " + group.name)
         try {
             storage.addGroup(Element.withGroup(group.name))
             storage.storage()
@@ -28,6 +32,7 @@ class BookmarkListener(val project: Project, val storage: Storage) : BookmarksLi
     }
 
     override fun groupRemoved(group: BookmarkGroup) {
+        LOG.info("groupRemoved - " + group.name)
         try {
             storage.removeGroup(group.name)
             storage.storage()
@@ -37,6 +42,7 @@ class BookmarkListener(val project: Project, val storage: Storage) : BookmarksLi
     }
 
     override fun groupRenamed(group: BookmarkGroup) {
+        LOG.info("groupRenamed - " + group.name)
         try {
             val bookmarks = group.getBookmarks()
             when (bookmarks.size) {
@@ -57,12 +63,13 @@ class BookmarkListener(val project: Project, val storage: Storage) : BookmarksLi
     }
 
     override fun bookmarkAdded(group: BookmarkGroup, bookmark: Bookmark) {
+        LOG.info("bookmarkAdded - " + group.name + ", " + bookmark.fileDescriptor() + ":" + bookmark.linenumber())
         try {
             storage.addBookmark(
                 group.name,
                 Element.withBookmark(
                     bookmark.fileDescriptor(), bookmark.linenumber(),
-                    getBookmarkName(group.name, bookmark.key()),
+                    getBookmarkName(group.name, bookmark),
                     bookmarksManager.getType(bookmark)!!.toString()
                 )
             )
@@ -73,6 +80,7 @@ class BookmarkListener(val project: Project, val storage: Storage) : BookmarksLi
     }
 
     override fun bookmarkRemoved(group: BookmarkGroup, bookmark: Bookmark) {
+        LOG.info("bookmarkRemoved - " + group.name + ", " + bookmark.fileDescriptor() + ":" + bookmark.linenumber())
         try {
             storage.removeBookmark(group.name, bookmark.key())
             storage.storage()
@@ -82,9 +90,10 @@ class BookmarkListener(val project: Project, val storage: Storage) : BookmarksLi
     }
 
     override fun bookmarkChanged(group: BookmarkGroup, bookmark: Bookmark) {
+        LOG.info("bookmarkChanged - " + group.name + ", " + bookmark.fileDescriptor() + ":" + bookmark.linenumber())
         try {
             storage.getBookmark(bookmark.key())!!.let {
-                it.name = getBookmarkName(group.name, bookmark.key())
+                it.name = getBookmarkName(group.name, bookmark)
                 it.bookmarkType = bookmarksManager.getType(bookmark)!!.toString()
             }
             storage.storage()
@@ -94,21 +103,17 @@ class BookmarkListener(val project: Project, val storage: Storage) : BookmarksLi
     }
 
     override fun bookmarkTypeChanged(bookmark: Bookmark) {
-        val groups = bookmarksManager.groups
-        for (group in groups) {
-            if (group.getBookmarks().contains(bookmark)) {
-                bookmarkChanged(group, bookmark)
-                break
-            }
-        }
+        LOG.info("bookmarkTypeChanged - " + bookmark.fileDescriptor() + ":" + bookmark.linenumber())
+        val groups = bookmarksManager.getGroups(bookmark)
+        bookmarkChanged(groups[0], bookmark)
     }
 
     /**
      * 获取书签名称
      */
-    private fun getBookmarkName(groupName: String, key: String): String {
-        val allBookmarks = MyBookmarkManager.bookmarkManager.getAllBookmarks(project)
-        return allBookmarks[groupName]?.get(key)?.name ?: ""
+    private fun getBookmarkName(groupName: String, bookmark: Bookmark): String {
+        val group = project.getService(BookmarksManager::class.java).getGroup(groupName)
+        return group?.getDescription(bookmark) ?: ""
     }
 }
 

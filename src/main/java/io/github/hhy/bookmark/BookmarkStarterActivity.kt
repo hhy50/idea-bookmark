@@ -2,11 +2,11 @@ package io.github.hhy.bookmark
 
 import com.intellij.ide.bookmark.BookmarksListener
 import com.intellij.ide.bookmark.BookmarksManager
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManagerListener
 import com.intellij.openapi.startup.ProjectActivity
 import io.github.hhy.bookmark.element.Element
-import io.github.hhy.bookmark.element.GroupElement
 import io.github.hhy.bookmark.element.key
 import io.github.hhy.bookmark.manager.MyBookmarkManager
 import io.github.hhy.bookmark.notify.Notify
@@ -15,6 +15,9 @@ import java.io.IOException
 
 
 class BookmarkStarterActivity : ProjectActivity, ProjectManagerListener {
+    companion object {
+        val LOG: Logger = Logger.getInstance(BookmarkStarterActivity::class.java)
+    }
 
     val myBookmarkManager = MyBookmarkManager.bookmarkManager
 
@@ -39,46 +42,43 @@ class BookmarkStarterActivity : ProjectActivity, ProjectManagerListener {
         val existedGroup = myBookmarkManager.getAllBookmarks(project)
         val backups = storage.elements()
 
+        LOG.info("Existed bookmarks, ${existedGroup.values}")
+        LOG.info("Backups bookmarks from bookmarks.json, $backups")
+
         for (group in backups) {
-            val existBookmarks = existedGroup[group.name]
-            if (existBookmarks == null) {
-                recoveryGroup(project, group)
-                continue
+            val existBookmarks = if (group.name in existedGroup) {
+                existedGroup[group.name] as MutableMap
+            } else {
+                myBookmarkManager.addGroup(project, Element.withGroup(group.name))
+                LOG.info("Synchronize group '${group.name}' to IntelliJ IDEA")
+                mutableMapOf()
             }
 
             val notExist = group.bookmarks.associateBy { it.key() }.filterKeys {
-                (existBookmarks as MutableMap).remove(it)
-                it !in existBookmarks
+                existBookmarks.remove(it) == null
             }
 
             // recover
             if (notExist.isNotEmpty()) {
                 notExist.values.forEach {
+                    LOG.info("Synchronize differential bookmark to IntelliJ IDEA, $it")
                     myBookmarkManager.addBookmark(project, group.name, it)
                 }
             }
         }
 
-        // 多的
+        // 同步到文件
         existedGroup.forEach { (groupName, group) ->
             for (bookmark in group.values) {
+                LOG.info("Synchronize differential bookmark to bookmarks.json, $bookmark")
                 storage.addBookmark(groupName, bookmark)
             }
         }
         for (invalid in myBookmarkManager.removeInvalid(project)) {
             val groups = bookmarkManager.getGroups(invalid)
             storage.removeBookmark(groups[0].name, invalid.key())
+            LOG.info("Remove invalid bookmark, $invalid")
         }
         storage.storage()
-    }
-
-    /**
-     * 恢复整个组
-     */
-    private fun recoveryGroup(project: Project, group: GroupElement) {
-        myBookmarkManager.addGroup(project, Element.withGroup(group.name))
-        for (bookmarkEle in group.bookmarks) {
-            myBookmarkManager.addBookmark(project, group.name, bookmarkEle)
-        }
     }
 }
