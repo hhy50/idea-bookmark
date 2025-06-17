@@ -47,6 +47,11 @@
     </extensions>
 
     <actions>
-
+        <action
+                id="io.github.hhy.bookmark.SyncBookmarkAction"
+                class="io.github.hhy.bookmark.SyncBookmarkAction"
+                text="Bookmark: Sync Bookmark"
+                description="Sync Bookmark">
+        </action>
     </actions>
 </idea-plugin>

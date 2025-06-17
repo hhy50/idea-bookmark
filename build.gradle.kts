@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "io.github.hhy"
-version = "1.1.4"
+version = "1.2.0"
 
 repositories {
   mavenLocal()
@@ -43,7 +43,7 @@ tasks {
   patchPluginXml {
     version.set(project.version.toString())
     sinceBuild.set("231")
-    untilBuild.set("251.*")
+    untilBuild.set("")
   }
 }
 

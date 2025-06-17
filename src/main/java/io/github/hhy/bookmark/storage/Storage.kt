@@ -55,5 +55,10 @@ sealed interface Storage {
      * 存储
      */
     fun storage(): Unit
+
+    /**
+     * 重新从磁盘加载
+     */
+    fun reload()
 }
 

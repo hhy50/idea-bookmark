@@ -13,13 +13,66 @@ import io.github.hhy.bookmark.element.linenumber
 import io.github.hhy.bookmark.notify.Notify
 import io.github.hhy.bookmark.storage.Storage
 import java.io.IOException
+import java.util.concurrent.atomic.AtomicBoolean
 
-class BookmarkListener(val project: Project, val storage: Storage) : BookmarksListener {
+class BookmarkListener(val listener: Listener) : BookmarksListener by listener {
+    companion object {
+        val InSync: AtomicBoolean = AtomicBoolean(false)
+    }
+
+    override fun groupAdded(group: BookmarkGroup) {
+        if (InSync.get()) return
+        listener.groupAdded(group)
+    }
+
+    override fun groupRemoved(group: BookmarkGroup) {
+        if (InSync.get()) return
+        listener.groupRemoved(group)
+    }
+
+    override fun groupRenamed(group: BookmarkGroup) {
+        if (InSync.get()) return
+        listener.groupRenamed(group)
+    }
+
+    override fun bookmarkAdded(
+        group: BookmarkGroup,
+        bookmark: Bookmark
+    ) {
+        if (InSync.get()) return
+        listener.bookmarkAdded(group, bookmark)
+    }
+
+    override fun bookmarkRemoved(
+        group: BookmarkGroup,
+        bookmark: Bookmark
+    ) {
+        if (InSync.get()) return
+        listener.bookmarkRemoved(group, bookmark)
+    }
+
+    override fun bookmarkChanged(
+        group: BookmarkGroup,
+        bookmark: Bookmark
+    ) {
+        if (InSync.get()) return
+        listener.bookmarkChanged(group, bookmark)
+    }
+
+    override fun bookmarkTypeChanged(bookmark: Bookmark) {
+        if (InSync.get()) return
+        listener.bookmarkTypeChanged(bookmark)
+    }
+}
+
+class Listener(val project: Project) : BookmarksListener {
     companion object {
         val LOG: Logger = Logger.getInstance(BookmarkListener::class.java)
     }
 
+
     val bookmarksManager: BookmarksManager = project.getService(BookmarksManager::class.java)
+    val storage: Storage = Storage.getStorage(project)
 
     override fun groupAdded(group: BookmarkGroup) {
         LOG.info("groupAdded - " + group.name)
@@ -116,6 +169,3 @@ class BookmarkListener(val project: Project, val storage: Storage) : BookmarksLi
         return group?.getDescription(bookmark) ?: ""
     }
 }
-
-
-

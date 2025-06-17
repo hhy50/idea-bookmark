@@ -23,6 +23,7 @@ fun Bookmark.linenumber(): Int {
     }
 }
 
+fun Bookmark.invalid() = this::class.java.name.contains("InvalidBookmark")
 
 fun com.intellij.ide.bookmarks.Bookmark.key(): String =
     "${this.fileDescriptor()}${Element.SEPARATOR}${this.linenumber()}"

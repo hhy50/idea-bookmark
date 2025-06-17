@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project
 import io.github.hhy.bookmark.element.BookmarkElement
 import io.github.hhy.bookmark.element.Element
 import io.github.hhy.bookmark.element.GroupElement
+import io.github.hhy.bookmark.element.invalid
 import io.github.hhy.bookmark.util.FDUtil
 import java.io.File
 
@@ -57,7 +58,7 @@ class HighVersionBookManager : MyBookmarkManager {
         val invalid: MutableList<Bookmark> = ArrayList()
         val bookmarksManager = project.getService(BookmarksManager::class.java)
         for (bookmark in bookmarksManager.bookmarks) {
-            if (bookmark::class.java.name.contains("InvalidBookmark")) {
+            if (bookmark.invalid()) {
                 bookmarksManager.remove(bookmark)
                 invalid += bookmark
             }
@@ -72,14 +73,15 @@ class HighVersionBookManager : MyBookmarkManager {
             if (file.exists()) {
                 return file.path
             }
-            var url = if (url.startsWith("jar://")) {
-                url.substring(6)
-            } else if (url.startsWith("file://")) {
-                url.substring(7)
-            } else {
-                url
-            }
-            return FDUtil.formatSeparator(url)
+            return FDUtil.formatSeparator(
+                if (url.startsWith("jar://")) {
+                    url.substring(6)
+                } else if (url.startsWith("file://")) {
+                    url.substring(7)
+                } else {
+                    url
+                }
+            )
         }
 
         @JvmStatic

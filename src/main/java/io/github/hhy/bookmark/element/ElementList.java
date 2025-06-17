@@ -3,7 +3,6 @@ package io.github.hhy.bookmark.element;
 import java.util.ArrayList;
 
 
-@Deprecated
 public class ElementList extends ArrayList<ElementList.Item> {
 
     /**
