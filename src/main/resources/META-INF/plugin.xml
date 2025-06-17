@@ -25,11 +25,13 @@
     <description><![CDATA[
             <p>This plugin enables bookmark synchronization with a local file (<b>default location: $project/.idea/bookmarks.json</b>), streamlining bookmark management and syncing across devices. </p>
             <p>Upon opening a project, it syncs existing IDE bookmarks to the file, while any extra bookmarks in the file are seamlessly added to the IDE.</p>
+            <p>Executing an Action named 'Bookmark: Sync Bookmark' will immediately trigger synchronization</p>
             <hr />
             <br />
             <p>本插件可以将书签同步到本地文件（<b>默认存储在：$project/.idea/bookmarks.json</b>）, 方便不同设备间书签的管理和同步</p>
             <p>打开项目时，会将idea中已存在的书签同步到文件中，文件中<b>多的</b>的书签会同步到idea里面。</p>
-            github: <a href="https://github.com/haiyanghan/idea-bookmark">@github</a>
+            <p>执行名字为 'Bookmark: Sync Bookmark' 的Action会立刻触发同步</p>
+            github: <a href="https://github.com/hhy50/idea-bookmark">@github</a>
             <br />
             qq群: 904726708
       ]]>
