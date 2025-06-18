@@ -14,19 +14,16 @@ class BookmarkStarterActivity : ProjectActivity, ProjectManagerListener {
     }
 
     override suspend fun execute(project: Project) {
-        // start listener
-        val connect = project.messageBus.connect()
-        connect.subscribe(BookmarksListener.TOPIC, BookmarkListener(Listener(project)))
-
         try {
-            BookmarkListener.InSync.set(true)
             // compare and recovery
             project.reload()
+
+            // start listener
+            val connect = project.messageBus.connect()
+            connect.subscribe(BookmarksListener.TOPIC, BookmarkListener(project))
         } catch (e: Exception) {
             e.printStackTrace()
             Notify.error(e.message)
-        } finally {
-            BookmarkListener.InSync.set(false)
         }
     }
 }

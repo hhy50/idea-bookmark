@@ -3,7 +3,6 @@ package io.github.hhy.bookmark.storage
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import com.intellij.openapi.application.TransactionGuard
-import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.io.FileUtil
@@ -24,14 +23,11 @@ class LocalFileStorage(private val project: Project) : Storage {
     }
 
     val storeFile: Path = project.basePath?.let { Path.of(it, DEFAULT_FILE) }!!
-    val storageDoc: Document by lazy {
-        FileDocumentManager.getInstance().getDocument(VirtualFileManager.getInstance().findFileByNioPath(storeFile)!!)!!
-    }
-
     val GSON = GsonBuilder().setPrettyPrinting().create()
-    val groups: MutableMap<String, GroupElement> by lazy {
+    val groups: MutableMap<String, GroupElement> = HashMap()
+
+    init {
         checkFile()
-        mutableMapOf()
     }
 
     @Synchronized
@@ -95,13 +91,23 @@ class LocalFileStorage(private val project: Project) : Storage {
             GSON.toJson(bookmarks),
             StandardCharsets.UTF_8
         )
+        TransactionGuard.getInstance().submitTransactionAndWait {
+            val docManager = FileDocumentManager.getInstance()
+            VirtualFileManager.getInstance().findFileByNioPath(storeFile)?.let {
+                docManager.getDocument(it)
+            }?.let {
+                docManager.reloadFromDisk(it)
+            }
+        }
     }
 
     override fun reload() {
         TransactionGuard.getInstance().submitTransactionAndWait {
             val docManager = FileDocumentManager.getInstance()
-            if (docManager.isDocumentUnsaved(storageDoc)) {
-                docManager.saveDocument( storageDoc)
+            VirtualFileManager.getInstance().findFileByNioPath(storeFile)?.let {
+                docManager.getDocument(it)
+            }?.let {
+                docManager.saveDocument(it)
             }
         }
 
