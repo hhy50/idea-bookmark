@@ -25,11 +25,11 @@ public class FDUtil {
 
     private static String toAbsolute0(String fd, String basePath) {
         File file = new File(fd);
-        if (file.exists() && file.isFile()) {
+        if (file.exists()) {
             return fd;
         }
         file = new File(fd.replace(PROJECT_RELATIVE, basePath));
-        if (file.exists() && file.isFile()) {
+        if (file.exists()) {
             return file.getPath();
         }
         return fd;
